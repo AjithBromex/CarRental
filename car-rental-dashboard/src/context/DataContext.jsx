@@ -4,27 +4,18 @@ import { vehiclesRef } from '../services/vehicleService'
 import { rentalsRef } from '../services/rentalService'
 import { useAuth } from './AuthContext'
 import { buildNotifications, buildVehicleStats, fleetTotals } from '../utils/analytics'
-import {
-  getLocalVehicles,
-  getLocalRentals,
-  subscribeLocalChanges,
-  saveLocalVehicles,
-  saveLocalRentals,
-} from '../services/localStore'
-import { isConfigured } from '../firebase/firebaseConfig'
 
 const DataContext = createContext(null)
 
 /**
- * DataProvider provides real-time fleet data with seamless local fallback.
- * Works immediately with default demo fleet data and syncs with Firestore
- * when connected.
+ * One pair of Firestore listeners for the whole app.
+ * Directly listens to your real Firestore database in real-time.
  */
 export function DataProvider({ children }) {
   const { user } = useAuth()
-  const [vehicles, setVehicles] = useState(() => getLocalVehicles())
-  const [rentals, setRentals] = useState(() => getLocalRentals())
-  const [loading, setLoading] = useState(false)
+  const [vehicles, setVehicles] = useState([])
+  const [rentals, setRentals] = useState([])
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
   useEffect(() => {
@@ -35,59 +26,45 @@ export function DataProvider({ children }) {
       return
     }
 
-    // Always start with available local data so the dashboard is immediately populated
-    setVehicles(getLocalVehicles())
-    setRentals(getLocalRentals())
-    setLoading(false)
-
-    // Listen for local updates (when user adds/edits/deletes vehicles or rentals)
-    const unsubLocal = subscribeLocalChanges(() => {
-      setVehicles(getLocalVehicles())
-      setRentals(getLocalRentals())
-    })
-
-    // If Firebase is not configured or user is in local admin mode, local storage is used
-    if (!isConfigured || user.uid === 'admin-local') {
-      return unsubLocal
+    setLoading(true)
+    setError(null)
+    let gotVehicles = false
+    let gotRentals = false
+    const done = () => {
+      if (gotVehicles && gotRentals) setLoading(false)
     }
 
-    let unsubVehicles = () => {}
-    let unsubRentals = () => {}
+    const unsubVehicles = onSnapshot(
+      query(vehiclesRef, orderBy('createdAt', 'desc')),
+      (snap) => {
+        setVehicles(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
+        gotVehicles = true
+        done()
+      },
+      (e) => {
+        console.warn('Firestore vehicles listener error:', e.message)
+        setError(e.message)
+        gotVehicles = true
+        done()
+      }
+    )
 
-    try {
-      unsubVehicles = onSnapshot(
-        query(vehiclesRef, orderBy('createdAt', 'desc')),
-        (snap) => {
-          if (!snap.empty) {
-            const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
-            setVehicles(list)
-            saveLocalVehicles(list)
-          }
-        },
-        (e) => {
-          console.warn('Firestore vehicles sync notice:', e.message)
-        }
-      )
-
-      unsubRentals = onSnapshot(
-        query(rentalsRef, orderBy('startDate', 'desc')),
-        (snap) => {
-          if (!snap.empty) {
-            const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
-            setRentals(list)
-            saveLocalRentals(list)
-          }
-        },
-        (e) => {
-          console.warn('Firestore rentals sync notice:', e.message)
-        }
-      )
-    } catch (e) {
-      console.warn('Firestore listener setup notice:', e.message)
-    }
+    const unsubRentals = onSnapshot(
+      query(rentalsRef, orderBy('startDate', 'desc')),
+      (snap) => {
+        setRentals(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
+        gotRentals = true
+        done()
+      },
+      (e) => {
+        console.warn('Firestore rentals listener error:', e.message)
+        setError(e.message)
+        gotRentals = true
+        done()
+      }
+    )
 
     return () => {
-      unsubLocal()
       unsubVehicles()
       unsubRentals()
     }

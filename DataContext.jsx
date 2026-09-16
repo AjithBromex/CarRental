@@ -8,9 +8,8 @@ import { buildNotifications, buildVehicleStats, fleetTotals } from '../utils/ana
 const DataContext = createContext(null)
 
 /**
- * One pair of Firestore listeners for the whole app. Every page reads from this
- * cache instead of re-querying, so charts and tables update the moment a write
- * lands — and we never fetch the same collection twice.
+ * One pair of Firestore listeners for the whole app.
+ * Directly listens to your real Firestore database in real-time.
  */
 export function DataProvider({ children }) {
   const { user } = useAuth()
@@ -26,10 +25,14 @@ export function DataProvider({ children }) {
       setLoading(false)
       return
     }
+
     setLoading(true)
+    setError(null)
     let gotVehicles = false
     let gotRentals = false
-    const done = () => gotVehicles && gotRentals && setLoading(false)
+    const done = () => {
+      if (gotVehicles && gotRentals) setLoading(false)
+    }
 
     const unsubVehicles = onSnapshot(
       query(vehiclesRef, orderBy('createdAt', 'desc')),
@@ -39,8 +42,10 @@ export function DataProvider({ children }) {
         done()
       },
       (e) => {
+        console.warn('Firestore vehicles listener error:', e.message)
         setError(e.message)
-        setLoading(false)
+        gotVehicles = true
+        done()
       }
     )
 
@@ -52,8 +57,10 @@ export function DataProvider({ children }) {
         done()
       },
       (e) => {
+        console.warn('Firestore rentals listener error:', e.message)
         setError(e.message)
-        setLoading(false)
+        gotRentals = true
+        done()
       }
     )
 
