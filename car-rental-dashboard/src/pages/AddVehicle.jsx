@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Car, ImageIcon, AlertCircle, Save } from 'lucide-react'
+import { ArrowLeft, Car, ImageIcon, AlertCircle, Save, Upload, Trash2 } from 'lucide-react'
 import { useData } from '../context/DataContext'
 import { useToast } from '../context/ToastContext'
 import { Spinner } from '../components/Loading'
@@ -17,6 +17,50 @@ const BLANK = {
   notes: '',
   status: 'available',
 }
+
+const processJpgFile = (file) =>
+  new Promise((resolve, reject) => {
+    if (!file) return reject(new Error('No file chosen'))
+    if (!file.type.startsWith('image/')) {
+      return reject(new Error('Please choose a JPG or PNG image file'))
+    }
+
+    const reader = new FileReader()
+    reader.onerror = () => reject(new Error('Failed to read image file'))
+    reader.onload = (e) => {
+      const img = new Image()
+      img.onerror = () => reject(new Error('Unable to parse image data'))
+      img.onload = () => {
+        const MAX_WIDTH = 1200
+        const MAX_HEIGHT = 900
+        let width = img.width
+        let height = img.height
+
+        if (width > MAX_WIDTH || height > MAX_HEIGHT) {
+          if (width / height > MAX_WIDTH / MAX_HEIGHT) {
+            height = Math.round((height * MAX_WIDTH) / width)
+            width = MAX_WIDTH
+          } else {
+            width = Math.round((width * MAX_HEIGHT) / height)
+            height = MAX_HEIGHT
+          }
+        }
+
+        const canvas = document.createElement('canvas')
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')
+        ctx.fillStyle = '#FFFFFF'
+        ctx.fillRect(0, 0, width, height)
+        ctx.drawImage(img, 0, 0, width, height)
+
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.85)
+        resolve(dataUrl)
+      }
+      img.src = e.target.result
+    }
+    reader.readAsDataURL(file)
+  })
 
 const validate = (form, existing, id) => {
   const e = {}
@@ -35,7 +79,8 @@ const validate = (form, existing, id) => {
     e.registrationNumber = 'Another vehicle already uses this plate'
   if (!form.year) e.year = 'Enter the model year'
   else if (year < 1980 || year > thisYear + 1) e.year = `Year must be between 1980 and ${thisYear + 1}`
-  if (form.image && !/^https?:\/\//i.test(form.image.trim())) e.image = 'Use a full https:// image link'
+  if (form.image && !/^(https?:\/\/|data:image\/)/i.test(form.image.trim()))
+    e.image = 'Please upload a valid JPG image file or image link'
 
   return e
 }
@@ -51,6 +96,9 @@ export default function AddVehicle() {
   const [errors, setErrors] = useState({})
   const [busy, setBusy] = useState(false)
   const [notFound, setNotFound] = useState(false)
+  const [showUrlInput, setShowUrlInput] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
+  const [imageLoading, setImageLoading] = useState(false)
   const hydrated = useRef(false)
 
   useEffect(() => {
@@ -75,8 +123,47 @@ export default function AddVehicle() {
     if (errors[key]) setErrors((x) => ({ ...x, [key]: undefined }))
   }
 
+  const handleFile = async (file) => {
+    if (!file) return
+    setImageLoading(true)
+    try {
+      const dataUrl = await processJpgFile(file)
+      setForm((f) => ({ ...f, image: dataUrl }))
+      if (errors.image) setErrors((x) => ({ ...x, image: undefined }))
+      toast('Vehicle photo uploaded')
+    } catch (err) {
+      setErrors((x) => ({ ...x, image: err.message }))
+      toast(err.message, 'error')
+    } finally {
+      setImageLoading(false)
+    }
+  }
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0]
+    if (file) handleFile(file)
+    e.target.value = ''
+  }
+
+  const handleDrop = (e) => {
+    e.preventDefault()
+    setIsDragging(false)
+    const file = e.dataTransfer.files?.[0]
+    if (file) handleFile(file)
+  }
+
+  const handleDragOver = (e) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = (e) => {
+    e.preventDefault()
+    setIsDragging(false)
+  }
+
   const preview = useMemo(
-    () => (/^https?:\/\//i.test(form.image.trim()) ? form.image.trim() : ''),
+    () => (/^(https?:\/\/|data:image\/)/i.test((form.image || '').trim()) ? form.image.trim() : ''),
     [form.image]
   )
 
@@ -207,14 +294,89 @@ export default function AddVehicle() {
               </div>
 
               <div className="field span-2">
-                <label htmlFor="image">Photo link</label>
-                <input id="image" className={`input ${errors.image ? 'invalid' : ''}`} value={form.image} onChange={set('image')} placeholder="https://…/innova.jpg" />
-                {errors.image ? (
+                <label>Vehicle photo (.jpg, .jpeg, .png)</label>
+                {preview ? (
+                  <div className="image-upload-preview">
+                    <img src={preview} alt="Vehicle preview" className="image-upload-thumb" />
+                    <div style={{ flex: 1, minWidth: 160 }}>
+                      <div style={{ fontWeight: 600, fontSize: '0.88rem', color: 'var(--fg)' }}>Photo uploaded</div>
+                      <div className="hint" style={{ fontSize: '0.78rem' }}>
+                        {form.image.startsWith('data:') ? 'Optimized JPG image ready' : 'Image URL linked'}
+                      </div>
+                    </div>
+                    <label className="btn btn-sm" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                      <Upload size={14} /> Change photo
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/jpg,image/png,image/webp"
+                        style={{ display: 'none' }}
+                        onChange={handleFileChange}
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      className="btn btn-sm"
+                      onClick={() => setForm((f) => ({ ...f, image: '' }))}
+                      title="Remove photo"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                    >
+                      <Trash2 size={14} /> Remove
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    className={`image-upload-box ${isDragging ? 'drag-over' : ''} ${errors.image ? 'invalid' : ''}`}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                  >
+                    <input
+                      id="image-file"
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      onChange={handleFileChange}
+                    />
+                    <div className="upload-icon-circle">
+                      {imageLoading ? <Spinner /> : <Upload size={22} color="var(--amber)" />}
+                    </div>
+                    <div>
+                      <span style={{ fontWeight: 600, color: 'var(--fg)' }}>Click to upload JPG photo</span>
+                      <span style={{ color: 'var(--muted)' }}> or drag and drop</span>
+                    </div>
+                    <span className="hint">Supports JPG, JPEG, PNG (compressed & saved automatically)</span>
+                  </div>
+                )}
+                {errors.image && (
                   <span className="err-text">
                     <AlertCircle size={13} /> {errors.image}
                   </span>
-                ) : (
-                  <span className="hint">Paste any image URL. Upload to Firebase Storage and paste the download link if you host your own photos.</span>
+                )}
+                <div className="row" style={{ justifyContent: 'flex-end', marginTop: 4 }}>
+                  <button
+                    type="button"
+                    style={{
+                      fontSize: '0.78rem',
+                      color: 'var(--muted)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      textDecoration: 'underline',
+                      padding: 0,
+                    }}
+                    onClick={() => setShowUrlInput((s) => !s)}
+                  >
+                    {showUrlInput ? 'Hide manual link input' : 'Or paste image link manually'}
+                  </button>
+                </div>
+                {showUrlInput && (
+                  <input
+                    type="text"
+                    className="input"
+                    value={form.image.startsWith('data:') ? '' : form.image}
+                    onChange={set('image')}
+                    placeholder="https://…/innova.jpg"
+                    style={{ marginTop: 6 }}
+                  />
                 )}
               </div>
 

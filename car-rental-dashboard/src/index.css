@@ -1873,3 +1873,71 @@ td.right {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Vehicle Photo Upload Styles */
+.image-upload-box {
+  border: 2px dashed var(--line);
+  border-radius: var(--r-md);
+  padding: 24px 16px;
+  text-align: center;
+  background: var(--surface-2);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  position: relative;
+}
+
+.image-upload-box:hover,
+.image-upload-box.drag-over {
+  border-color: var(--amber);
+  background: var(--surface);
+}
+
+.image-upload-box.invalid {
+  border-color: var(--red);
+}
+
+.image-upload-box input[type='file'] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+}
+
+.upload-icon-circle {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--amber-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.image-upload-preview {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+
+.image-upload-thumb {
+  width: 80px;
+  height: 60px;
+  border-radius: var(--r-sm);
+  object-fit: cover;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+

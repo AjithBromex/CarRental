@@ -40,12 +40,12 @@ Authentication → Sign-in method → enable **Email/Password**. Then Users → 
 
 | Field | Value |
 | --- | --- |
-| Email | `admin@fleetline.local` |
-| Password | something long that you'll remember |
+| Email | `admin@fleetline.local` (or username `admin`) |
+| Password | `admin123` |
 
-On the login screen the owner types just `admin` — the app appends `@` plus
-`VITE_ADMIN_DOMAIN`. Typing the full email works too. No password is ever stored in this code;
-Firebase Authentication holds it.
+On the login screen, you can log in directly with:
+- **Username**: `admin`
+- **Password**: `admin123`
 
 **3. Lock down the database**
 

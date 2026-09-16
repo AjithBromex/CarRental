@@ -1,0 +1,9 @@
+{
+  "name": "car-rental-workspace",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix car-rental-dashboard run dev",
+    "build": "npm --prefix car-rental-dashboard run build",
+    "preview": "npm --prefix car-rental-dashboard run preview"
+  }
+}

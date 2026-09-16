@@ -25,7 +25,11 @@ export default function Login() {
 
     if (!form.username.trim()) return setError('Enter your username.')
     if (!form.password) return setError('Enter your password.')
-    if (!isConfigured)
+
+    const cleanUser = form.username.trim().toLowerCase()
+    const isAdminCreds = (cleanUser === 'admin' || cleanUser === 'admin@fleetline.local') && form.password === 'admin123'
+
+    if (!isConfigured && !isAdminCreds)
       return setError('Firebase isn\u2019t configured yet. Copy .env.example to .env and add your project keys.')
 
     setBusy(true)
@@ -158,9 +162,10 @@ export default function Login() {
             </button>
           </form>
 
-          <p className="hint" style={{ marginTop: 18 }}>
-            Credentials live in Firebase Authentication, not in this code. Create the owner account
-            once in the Firebase console.
+          <p className="hint" style={{ marginTop: 18, lineHeight: 1.5 }}>
+            <strong>Default sign-in:</strong> Username: <code>admin</code> · Password: <code>admin123</code>
+            <br />
+            Or create/use your owner account in the Firebase Console.
           </p>
         </div>
       </section>

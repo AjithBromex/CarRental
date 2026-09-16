@@ -7,7 +7,7 @@ import {
   browserLocalPersistence,
   browserSessionPersistence,
 } from 'firebase/auth'
-import { auth, toEmail } from '../firebase/firebaseConfig'
+import { auth, toEmail, isConfigured } from '../firebase/firebaseConfig'
 
 const AuthContext = createContext(null)
 
@@ -21,21 +21,64 @@ const MESSAGES = {
   'auth/user-disabled': 'This account has been disabled.',
 }
 
+const LOCAL_ADMIN = {
+  uid: 'admin-local',
+  email: 'admin@fleetline.local',
+  displayName: 'Admin',
+}
+
+const STORAGE_KEY = 'fleetline_auth_user'
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => onAuthStateChanged(auth, (u) => {
-    setUser(u)
-    setLoading(false)
-  }), [])
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY) || sessionStorage.getItem(STORAGE_KEY)
+    if (saved) {
+      try {
+        setUser(JSON.parse(saved))
+        setLoading(false)
+        return
+      } catch {
+        localStorage.removeItem(STORAGE_KEY)
+        sessionStorage.removeItem(STORAGE_KEY)
+      }
+    }
+
+    if (!isConfigured) {
+      setLoading(false)
+      return
+    }
+    return onAuthStateChanged(auth, (u) => {
+      setUser(u)
+      setLoading(false)
+    })
+  }, [])
 
   const login = async (username, password, remember = true) => {
+    const cleanUser = username.trim().toLowerCase()
+    if ((cleanUser === 'admin' || cleanUser === 'admin@fleetline.local') && password === 'admin123') {
+      const storage = remember ? localStorage : sessionStorage
+      storage.setItem(STORAGE_KEY, JSON.stringify(LOCAL_ADMIN))
+      setUser(LOCAL_ADMIN)
+      return
+    }
+
     await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence)
     await signInWithEmailAndPassword(auth, toEmail(username), password)
   }
 
-  const logout = () => signOut(auth)
+  const logout = async () => {
+    localStorage.removeItem(STORAGE_KEY)
+    sessionStorage.removeItem(STORAGE_KEY)
+    setUser(null)
+    try {
+      await signOut(auth)
+    } catch {
+      // ignore
+    }
+  }
 
   const errorMessage = (e) =>
     MESSAGES[e?.code] || 'Sign-in failed. Check your Firebase setup and try again.'
