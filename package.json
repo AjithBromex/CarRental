@@ -1,9 +1,12 @@
 {
   "name": "car-rental-workspace",
   "private": true,
+  "workspaces": [
+    "car-rental-dashboard"
+  ],
   "scripts": {
     "dev": "npm --prefix car-rental-dashboard run dev",
-    "build": "npm --prefix car-rental-dashboard run build",
+    "build": "npm --prefix car-rental-dashboard install && npm --prefix car-rental-dashboard run build && node -e \"const fs=require('fs'); fs.cpSync('car-rental-dashboard/dist', 'dist', {recursive: true, force: true});\"",
     "preview": "npm --prefix car-rental-dashboard run preview"
   }
 }
