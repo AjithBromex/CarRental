@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react'
 import { onSnapshot, query, orderBy } from 'firebase/firestore'
 import { vehiclesRef } from '../services/vehicleService'
 import { rentalsRef } from '../services/rentalService'
@@ -9,7 +9,8 @@ const DataContext = createContext(null)
 
 /**
  * One pair of Firestore listeners for the whole app.
- * Directly listens to your real Firestore database in real-time.
+ * Directly listens to your real Firestore database in real-time with
+ * instant optimistic updates so adding & deleting have zero lag.
  */
 export function DataProvider({ children }) {
   const { user } = useAuth()
@@ -70,6 +71,31 @@ export function DataProvider({ children }) {
     }
   }, [user])
 
+  // Instant optimistic actions
+  const removeVehicleOptimistic = useCallback((id) => {
+    let removed = null
+    setVehicles((prev) => {
+      removed = prev.find((v) => v.id === id)
+      return prev.filter((v) => v.id !== id)
+    })
+    setRentals((prev) => prev.filter((r) => r.vehicleId !== id))
+    return removed
+  }, [])
+
+  const restoreVehicle = useCallback((vehicle) => {
+    if (vehicle) {
+      setVehicles((prev) => [vehicle, ...prev.filter((v) => v.id !== vehicle.id)])
+    }
+  }, [])
+
+  const addVehicleOptimistic = useCallback((newVeh) => {
+    setVehicles((prev) => [newVeh, ...prev.filter((v) => v.id !== newVeh.id)])
+  }, [])
+
+  const updateVehicleOptimistic = useCallback((id, patch) => {
+    setVehicles((prev) => prev.map((v) => (v.id === id ? { ...v, ...patch } : v)))
+  }, [])
+
   const value = useMemo(() => {
     const statsByVehicle = buildVehicleStats(rentals)
     return {
@@ -82,8 +108,21 @@ export function DataProvider({ children }) {
       notifications: buildNotifications(vehicles, rentals),
       vehicleById: (id) => vehicles.find((v) => v.id === id),
       rentalsForVehicle: (id) => rentals.filter((r) => r.vehicleId === id),
+      removeVehicleOptimistic,
+      restoreVehicle,
+      addVehicleOptimistic,
+      updateVehicleOptimistic,
     }
-  }, [vehicles, rentals, loading, error])
+  }, [
+    vehicles,
+    rentals,
+    loading,
+    error,
+    removeVehicleOptimistic,
+    restoreVehicle,
+    addVehicleOptimistic,
+    updateVehicleOptimistic,
+  ])
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>
 }

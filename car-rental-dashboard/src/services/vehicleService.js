@@ -2,6 +2,7 @@ import {
   collection,
   doc,
   addDoc,
+  setDoc,
   updateDoc,
   deleteDoc,
   getDocs,
@@ -25,8 +26,16 @@ const clean = (v) => ({
   status: v.status || 'available',
 })
 
-export const addVehicle = (data) =>
-  addDoc(vehiclesRef, { ...clean(data), createdAt: serverTimestamp() })
+export const createVehicleRef = () => doc(vehiclesRef)
+
+export const addVehicleWithId = (id, data) =>
+  setDoc(doc(db, 'vehicles', id), { ...clean(data), createdAt: serverTimestamp() })
+
+export const addVehicle = async (data) => {
+  const newRef = doc(vehiclesRef)
+  await setDoc(newRef, { ...clean(data), createdAt: serverTimestamp() })
+  return newRef
+}
 
 export const updateVehicle = (id, data) =>
   updateDoc(doc(db, 'vehicles', id), { ...clean(data), updatedAt: serverTimestamp() })
@@ -34,14 +43,22 @@ export const updateVehicle = (id, data) =>
 export const setVehicleStatus = (id, status) =>
   updateDoc(doc(db, 'vehicles', id), { status, updatedAt: serverTimestamp() })
 
-/** Removes the vehicle and every rental attached to it, in one atomic batch. */
+/** Removes the vehicle instantly and cleans up any attached rentals */
 export const deleteVehicle = async (id) => {
-  const attached = await getDocs(query(collection(db, 'rentals'), where('vehicleId', '==', id)))
-  const batch = writeBatch(db)
-  attached.forEach((d) => batch.delete(d.ref))
-  batch.delete(doc(db, 'vehicles', id))
-  await batch.commit()
-  return attached.size
+  // Delete the vehicle doc directly
+  await deleteDoc(doc(db, 'vehicles', id))
+
+  // Clean up any associated rentals in the background
+  try {
+    const attached = await getDocs(query(collection(db, 'rentals'), where('vehicleId', '==', id)))
+    if (!attached.empty) {
+      const batch = writeBatch(db)
+      attached.forEach((d) => batch.delete(d.ref))
+      await batch.commit()
+    }
+  } catch (err) {
+    console.warn('Attached rentals cleanup notice:', err.message)
+  }
 }
 
 export const VEHICLE_TYPES = ['Hatchback', 'Sedan', 'SUV', 'MUV', 'Tempo Traveller', 'Pickup', 'Luxury']

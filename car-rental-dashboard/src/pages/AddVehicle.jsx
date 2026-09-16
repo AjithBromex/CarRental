@@ -5,7 +5,7 @@ import { useData } from '../context/DataContext'
 import { useToast } from '../context/ToastContext'
 import { Spinner } from '../components/Loading'
 import Plate from '../components/Plate'
-import { addVehicle, updateVehicle, VEHICLE_TYPES } from '../services/vehicleService'
+import { addVehicle, addVehicleWithId, createVehicleRef, updateVehicle, VEHICLE_TYPES } from '../services/vehicleService'
 
 const BLANK = {
   name: '',
@@ -31,30 +31,27 @@ const processJpgFile = (file) =>
       const img = new Image()
       img.onerror = () => reject(new Error('Unable to parse image data'))
       img.onload = () => {
-        const MAX_WIDTH = 1200
-        const MAX_HEIGHT = 900
+        // Fast, compact dimensions for instant upload and lightweight document size
+        const MAX_WIDTH = 800
+        const MAX_HEIGHT = 600
         let width = img.width
         let height = img.height
 
         if (width > MAX_WIDTH || height > MAX_HEIGHT) {
-          if (width / height > MAX_WIDTH / MAX_HEIGHT) {
-            height = Math.round((height * MAX_WIDTH) / width)
-            width = MAX_WIDTH
-          } else {
-            width = Math.round((width * MAX_HEIGHT) / height)
-            height = MAX_HEIGHT
-          }
+          const ratio = Math.min(MAX_WIDTH / width, MAX_HEIGHT / height)
+          width = Math.round(width * ratio)
+          height = Math.round(height * ratio)
         }
 
         const canvas = document.createElement('canvas')
         canvas.width = width
         canvas.height = height
-        const ctx = canvas.getContext('2d')
+        const ctx = canvas.getContext('2d', { alpha: false })
         ctx.fillStyle = '#FFFFFF'
         ctx.fillRect(0, 0, width, height)
         ctx.drawImage(img, 0, 0, width, height)
 
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.85)
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.8)
         resolve(dataUrl)
       }
       img.src = e.target.result
@@ -88,7 +85,7 @@ const validate = (form, existing, id) => {
 export default function AddVehicle() {
   const { id } = useParams()
   const isEdit = Boolean(id)
-  const { vehicles, loading } = useData()
+  const { vehicles, loading, addVehicleOptimistic, updateVehicleOptimistic } = useData()
   const { toast } = useToast()
   const navigate = useNavigate()
 
@@ -176,13 +173,27 @@ export default function AddVehicle() {
     setBusy(true)
     try {
       if (isEdit) {
-        await updateVehicle(id, form)
+        // Immediate 0ms optimistic UI update and instant navigation
+        updateVehicleOptimistic(id, form)
         toast(`${form.name} updated`)
         navigate(`/vehicles/${id}`)
+        // Sync to Firestore in background
+        await updateVehicle(id, form)
       } else {
-        await addVehicle(form)
+        // Generate document ID instantly
+        const newRef = createVehicleRef()
+        const newId = newRef.id
+        // Add to React state immediately (0ms delay)
+        addVehicleOptimistic({
+          id: newId,
+          ...form,
+          year: Number(form.year),
+          createdAt: new Date(),
+        })
         toast(`${form.name} added to the fleet`)
         navigate('/vehicles')
+        // Sync to Firestore in background
+        await addVehicleWithId(newId, form)
       }
     } catch (err) {
       toast(`Couldn't save: ${err.message}`, 'error')

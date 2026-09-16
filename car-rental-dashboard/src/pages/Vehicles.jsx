@@ -21,7 +21,7 @@ const SORTS = {
 }
 
 export default function Vehicles() {
-  const { vehicles, rentals, loading } = useData()
+  const { vehicles, rentals, loading, removeVehicleOptimistic, restoreVehicle } = useData()
   const { toast } = useToast()
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
@@ -62,17 +62,19 @@ export default function Vehicles() {
   const types = useMemo(() => [...new Set(vehicles.map((v) => v.type).filter(Boolean))], [vehicles])
 
   const confirmDelete = async () => {
+    const target = toDelete
+    if (!target) return
+    setToDelete(null) // Instant modal close (0ms delay)
+
+    // Remove from UI immediately
+    const previous = removeVehicleOptimistic(target.id)
+
     try {
-      const removed = await deleteVehicle(toDelete.id)
-      toast(
-        removed
-          ? `${toDelete.name} deleted along with ${removed} rental record${removed === 1 ? '' : 's'}`
-          : `${toDelete.name} deleted`
-      )
+      await deleteVehicle(target.id)
+      toast(`${target.name} deleted`)
     } catch (e) {
+      restoreVehicle(previous)
       toast(`Couldn't delete: ${e.message}`, 'error')
-    } finally {
-      setToDelete(null)
     }
   }
 
