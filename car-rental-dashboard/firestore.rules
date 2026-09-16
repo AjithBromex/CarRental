@@ -1,0 +1,46 @@
+rules_version = '2';
+
+// Only the single admin account can read or write business data.
+// Replace ADMIN_UID with the UID shown in Firebase console > Authentication > Users.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.uid == 'ADMIN_UID'
+        && request.auth.token.email_verified != false;
+    }
+
+    function validVehicle(d) {
+      return d.name is string && d.name.size() > 0
+        && d.registrationNumber is string && d.registrationNumber.size() > 0
+        && d.status in ['available', 'rented', 'maintenance'];
+    }
+
+    function validRental(d) {
+      return d.vehicleId is string && d.vehicleId.size() > 0
+        && d.driverName is string && d.driverName.size() > 0
+        && d.phoneNumber is string
+        && d.totalAmount is number && d.totalAmount >= 0
+        && d.amountPaid is number && d.amountPaid >= 0
+        && d.amountPaid <= d.totalAmount
+        && d.days is number && d.days > 0
+        && d.status in ['active', 'completed', 'cancelled'];
+    }
+
+    match /vehicles/{vehicleId} {
+      allow read, delete: if isAdmin();
+      allow create, update: if isAdmin() && validVehicle(request.resource.data);
+    }
+
+    match /rentals/{rentalId} {
+      allow read, delete: if isAdmin();
+      allow create, update: if isAdmin() && validRental(request.resource.data);
+    }
+
+    // Everything else stays closed.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
