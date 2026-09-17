@@ -65,20 +65,24 @@ export default function Analytics() {
   const comparison = picked.length ? fleet.filter((v) => picked.includes(v.id)) : ranked.slice(0, 3)
 
   const radarData = useMemo(() => {
+    if (!comparison.length || !fleet.length) return []
     const max = {
-      rentals: Math.max(1, ...fleet.map((v) => v.stats.rentals)),
-      days: Math.max(1, ...fleet.map((v) => v.stats.days)),
-      revenue: Math.max(1, ...fleet.map((v) => v.stats.revenue)),
-      avg: Math.max(1, ...fleet.map((v) => (v.stats.rentals ? v.stats.revenue / v.stats.rentals : 0))),
+      rentals: Math.max(1, ...fleet.map((v) => v.stats?.rentals || 0)),
+      days: Math.max(1, ...fleet.map((v) => v.stats?.days || 0)),
+      revenue: Math.max(1, ...fleet.map((v) => v.stats?.revenue || 0)),
+      avg: Math.max(1, ...fleet.map((v) => (v.stats?.rentals ? (v.stats.revenue || 0) / v.stats.rentals : 0))),
     }
     return [
-      { axis: 'Rentals', ...Object.fromEntries(comparison.map((v) => [v.name, (v.stats.rentals / max.rentals) * 100])) },
-      { axis: 'Days out', ...Object.fromEntries(comparison.map((v) => [v.name, (v.stats.days / max.days) * 100])) },
-      { axis: 'Revenue', ...Object.fromEntries(comparison.map((v) => [v.name, (v.stats.revenue / max.revenue) * 100])) },
+      { axis: 'Rentals', ...Object.fromEntries(comparison.map((v) => [`v_${v.id}`, ((v.stats?.rentals || 0) / max.rentals) * 100])) },
+      { axis: 'Days out', ...Object.fromEntries(comparison.map((v) => [`v_${v.id}`, ((v.stats?.days || 0) / max.days) * 100])) },
+      { axis: 'Revenue', ...Object.fromEntries(comparison.map((v) => [`v_${v.id}`, ((v.stats?.revenue || 0) / max.revenue) * 100])) },
       {
         axis: 'Avg value',
         ...Object.fromEntries(
-          comparison.map((v) => [v.name, ((v.stats.rentals ? v.stats.revenue / v.stats.rentals : 0) / max.avg) * 100])
+          comparison.map((v) => [
+            `v_${v.id}`,
+            (((v.stats?.rentals ? (v.stats.revenue || 0) / v.stats.rentals : 0) / max.avg) * 100) || 0,
+          ])
         ),
       },
     ]
@@ -89,7 +93,7 @@ export default function Analytics() {
 
   const palette = [chartColors.amber, chartColors.blue, chartColors.green, chartColors.violet]
 
-  if (loading)
+  if (loading && fleet.length === 0)
     return (
       <div className="panel">
         <SkeletonRows rows={6} height={64} />
@@ -248,7 +252,7 @@ export default function Analytics() {
                 <PolarGrid stroke="var(--line)" />
                 <PolarAngleAxis dataKey="axis" tick={{ fill: 'var(--faint)', fontSize: 11 }} />
                 {comparison.map((v, i) => (
-                  <Radar key={v.id} name={v.name} dataKey={v.name} stroke={palette[i % 4]} fill={palette[i % 4]} fillOpacity={0.16} strokeWidth={2} />
+                  <Radar key={v.id} name={v.name} dataKey={`v_${v.id}`} stroke={palette[i % 4]} fill={palette[i % 4]} fillOpacity={0.16} strokeWidth={2} />
                 ))}
                 <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
                 <Tooltip {...tooltipStyle} formatter={(v) => `${Number(v).toFixed(0)}% of best`} />

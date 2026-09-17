@@ -35,7 +35,8 @@ export function buildVehicleStats(rentals = []) {
   return map
 }
 
-export const statsFor = (map, vehicleId) => map.get(vehicleId) || blank()
+export const statsFor = (map, vehicleId) =>
+  (map && typeof map.get === 'function' ? map.get(vehicleId) : null) || blank()
 
 /** Vehicles decorated with their stats, ready for tables and cards. */
 export function withStats(vehicles = [], rentals = []) {

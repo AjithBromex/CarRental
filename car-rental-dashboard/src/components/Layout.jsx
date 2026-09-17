@@ -4,6 +4,7 @@ import Sidebar from './Sidebar'
 import Navbar from './Navbar'
 import { PageLoader } from './Loading'
 import ConfirmDialog from './ConfirmDialog'
+import ErrorBoundary from './ErrorBoundary'
 import { useAuth } from '../context/AuthContext'
 import { useData } from '../context/DataContext'
 import { AlertCircle } from 'lucide-react'
@@ -47,9 +48,11 @@ export default function Layout() {
               </span>
             </div>
           )}
-          <Suspense fallback={<PageLoader label="Loading page" />}>
-            <Outlet />
-          </Suspense>
+          <ErrorBoundary>
+            <Suspense fallback={<PageLoader label="Loading page" />}>
+              <Outlet />
+            </Suspense>
+          </ErrorBoundary>
         </main>
       </div>
 
