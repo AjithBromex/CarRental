@@ -34,23 +34,31 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (!isConfigured) {
+      setLoading(false)
+      return
+    }
+
+    // Hydrate saved user if not the legacy mock admin
     const saved = localStorage.getItem(STORAGE_KEY) || sessionStorage.getItem(STORAGE_KEY)
     if (saved) {
       try {
-        setUser(JSON.parse(saved))
-        setLoading(false)
-        return
+        const parsed = JSON.parse(saved)
+        if (parsed.uid === 'admin-local') {
+          localStorage.removeItem(STORAGE_KEY)
+          sessionStorage.removeItem(STORAGE_KEY)
+          setUser(null)
+        } else {
+          setUser(parsed)
+        }
       } catch {
         localStorage.removeItem(STORAGE_KEY)
         sessionStorage.removeItem(STORAGE_KEY)
       }
     }
 
-    if (!isConfigured) {
-      setLoading(false)
-      return
-    }
-    return onAuthStateChanged(auth, (u) => {
+    // Always register onAuthStateChanged to sync with real Firebase Auth
+    const unsub = onAuthStateChanged(auth, (u) => {
       if (u) {
         const minUser = {
           uid: u.uid,
@@ -60,37 +68,21 @@ export function AuthProvider({ children }) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(minUser))
         setUser(u)
       } else {
-        const curSaved = localStorage.getItem(STORAGE_KEY) || sessionStorage.getItem(STORAGE_KEY)
-        if (curSaved) {
-          try {
-            const parsed = JSON.parse(curSaved)
-            if (parsed.uid !== 'admin-local') {
-              localStorage.removeItem(STORAGE_KEY)
-              sessionStorage.removeItem(STORAGE_KEY)
-              setUser(null)
-            }
-          } catch {
-            setUser(null)
-          }
-        } else {
-          setUser(null)
-        }
+        localStorage.removeItem(STORAGE_KEY)
+        sessionStorage.removeItem(STORAGE_KEY)
+        setUser(null)
       }
       setLoading(false)
     })
+
+    return () => unsub()
   }, [])
 
   const login = async (username, password, remember = true) => {
-    const cleanUser = username.trim().toLowerCase()
-    if ((cleanUser === 'admin' || cleanUser === 'admin@fleetline.local') && password === 'admin123') {
-      const storage = remember ? localStorage : sessionStorage
-      storage.setItem(STORAGE_KEY, JSON.stringify(LOCAL_ADMIN))
-      setUser(LOCAL_ADMIN)
-      return
-    }
-
     if (!remember) {
       await setPersistence(auth, browserSessionPersistence)
+    } else {
+      await setPersistence(auth, browserLocalPersistence)
     }
 
     const cred = await signInWithEmailAndPassword(auth, toEmail(username), password)

@@ -8,14 +8,14 @@ import {
 
 const clean = (val) => (val ? String(val).replace(/^[",'\s]+|[",'\s]+$/g, '') : '')
 
-// Values come from .env (never commit the real file).
+// Values come from .env with production fallbacks for Vercel builds.
 const firebaseConfig = {
-  apiKey: clean(import.meta.env.VITE_FIREBASE_API_KEY),
-  authDomain: clean(import.meta.env.VITE_FIREBASE_AUTH_DOMAIN),
-  projectId: clean(import.meta.env.VITE_FIREBASE_PROJECT_ID),
-  storageBucket: clean(import.meta.env.VITE_FIREBASE_STORAGE_BUCKET),
-  messagingSenderId: clean(import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID),
-  appId: clean(import.meta.env.VITE_FIREBASE_APP_ID),
+  apiKey: clean(import.meta.env.VITE_FIREBASE_API_KEY) || 'AIzaSyAy-2AaFFSTnz3dHZnySATLOBXB9mO1RMY',
+  authDomain: clean(import.meta.env.VITE_FIREBASE_AUTH_DOMAIN) || 'car-rental-manager-c6ef7.firebaseapp.com',
+  projectId: clean(import.meta.env.VITE_FIREBASE_PROJECT_ID) || 'car-rental-manager-c6ef7',
+  storageBucket: clean(import.meta.env.VITE_FIREBASE_STORAGE_BUCKET) || 'car-rental-manager-c6ef7.firebasestorage.app',
+  messagingSenderId: clean(import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID) || '69626765237',
+  appId: clean(import.meta.env.VITE_FIREBASE_APP_ID) || '1:69626765237:web:8f83516089ac98bd7dc3fc',
 }
 
 export const isConfigured = Boolean(firebaseConfig.apiKey && firebaseConfig.projectId)

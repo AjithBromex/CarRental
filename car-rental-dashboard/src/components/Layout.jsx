@@ -41,11 +41,15 @@ export default function Layout() {
         <main className="page">
           {error && (
             <div className="alert error" style={{ marginBottom: 16 }}>
-              <AlertCircle size={16} />
-              <span>
-                Firestore refused the request: {error}. Check your security rules and that this
-                account is the admin UID.
-              </span>
+              <AlertCircle size={16} style={{ flexShrink: 0, marginTop: 2 }} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <span>
+                  <strong>Firestore permission denied:</strong> {error}
+                </span>
+                <span style={{ fontSize: '0.85rem', opacity: 0.9 }}>
+                  Current user UID: <code>{user?.uid || 'Not signed in'}</code>. Please ensure rules are published in Firebase Console &gt; Firestore Database &gt; Rules. If your UID is <code>admin-local</code>, please sign out and sign in with your Firebase account.
+                </span>
+              </div>
             </div>
           )}
           <ErrorBoundary>
