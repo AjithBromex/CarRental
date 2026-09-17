@@ -1,14 +1,14 @@
 rules_version = '2';
 //email: admin@fleetline.local
-//uid: aBcD1234ExampleUid
+//uid: YUadCTU9tVhXttsE9rq1AcHvE492
 // Only the single admin account can read or write business data.
-// Replace "aBcD1234ExampleUid" with your actual admin UID from Firebase Authentication.
+// Admin UID: YUadCTU9tVhXttsE9rq1AcHvE492
 service cloud.firestore {
   match /databases/{database}/documents {
 
     function isAdmin() {
       return request.auth != null
-        && request.auth.uid == "aBcD1234ExampleUid";
+        && request.auth.uid == "YUadCTU9tVhXttsE9rq1AcHvE492";
     }
 
     function validVehicle(d) {
@@ -30,18 +30,18 @@ service cloud.firestore {
 
     match /vehicles/{vehicleId} {
       allow read, write: if request.auth != null
-        && request.auth.uid == "aBcD1234ExampleUid";
+        && request.auth.uid == "YUadCTU9tVhXttsE9rq1AcHvE492";
     }
 
     match /rentals/{rentalId} {
       allow read, write: if request.auth != null
-        && request.auth.uid == "aBcD1234ExampleUid";
+        && request.auth.uid == "YUadCTU9tVhXttsE9rq1AcHvE492";
     }
 
     // Default rule for all other documents
     match /{document=**} {
       allow read, write: if request.auth != null
-        && request.auth.uid == "aBcD1234ExampleUid";
+        && request.auth.uid == "YUadCTU9tVhXttsE9rq1AcHvE492";
     }
   }
 }

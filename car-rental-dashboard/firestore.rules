@@ -1,5 +1,6 @@
 rules_version = '2';
-
+//email: admin@fleetline.local
+//uid: YUadCTU9tVhXttsE9rq1AcHvE492
 // Only the single admin account can read or write business data.
 // Admin UID: YUadCTU9tVhXttsE9rq1AcHvE492
 service cloud.firestore {
