@@ -29,9 +29,7 @@ export default function VehicleCard({ vehicle, onEdit, onDelete }) {
         <div className="vcard-title">
           <div>
             <strong>{vehicle.name}</strong>
-            <small>
-              {vehicle.model || vehicle.type} · {vehicle.year}
-            </small>
+            <small>{vehicle.year}</small>
           </div>
           <Plate number={vehicle.registrationNumber} />
         </div>

@@ -27,9 +27,7 @@ export default function VehicleTable({ vehicles, onEdit, onDelete }) {
             <tr key={v.id} className="clickable" onClick={() => navigate(`/vehicles/${v.id}`)}>
               <td>
                 <span className="cell-title">{v.name}</span>
-                <span className="cell-sub">
-                  {v.model || v.type} · {v.year}
-                </span>
+                <span className="cell-sub">{v.year}</span>
               </td>
               <td>
                 <Plate number={v.registrationNumber} />

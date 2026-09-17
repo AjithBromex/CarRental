@@ -15,16 +15,19 @@ import { db } from '../firebase/firebaseConfig'
 
 export const vehiclesRef = collection(db, 'vehicles')
 
-const clean = (v) => ({
-  name: v.name.trim(),
-  model: (v.model || '').trim(),
-  registrationNumber: v.registrationNumber.trim().toUpperCase(),
-  image: (v.image || '').trim(),
-  type: v.type || 'Sedan',
-  year: Number(v.year) || new Date().getFullYear(),
-  notes: (v.notes || '').trim(),
-  status: v.status || 'available',
-})
+const clean = (v) => {
+  const data = {
+    name: v.name.trim(),
+    registrationNumber: v.registrationNumber.trim().toUpperCase(),
+    image: (v.image || '').trim(),
+    year: Number(v.year) || new Date().getFullYear(),
+    notes: (v.notes || '').trim(),
+    status: v.status || 'available',
+  }
+  if (v.model) data.model = v.model.trim()
+  if (v.type) data.type = v.type.trim()
+  return data
+}
 
 export const createVehicleRef = () => doc(vehiclesRef)
 

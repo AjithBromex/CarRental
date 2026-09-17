@@ -31,7 +31,6 @@ export default function Vehicles() {
   const [toDelete, setToDelete] = useState(null)
 
   const status = params.get('status') || 'all'
-  const type = params.get('type') || 'all'
 
   const setParam = (key, value) => {
     const next = new URLSearchParams(params)
@@ -48,18 +47,14 @@ export default function Vehicles() {
     const q = term.trim().toLowerCase()
     return withStats(vehicles, rentals)
       .filter((v) => (status === 'all' ? true : v.status === status))
-      .filter((v) => (type === 'all' ? true : v.type === type))
       .filter(
         (v) =>
           !q ||
           v.name?.toLowerCase().includes(q) ||
-          v.model?.toLowerCase().includes(q) ||
           v.registrationNumber?.toLowerCase().includes(q)
       )
       .sort(SORTS[sort])
-  }, [vehicles, rentals, term, status, type, sort])
-
-  const types = useMemo(() => [...new Set(vehicles.map((v) => v.type).filter(Boolean))], [vehicles])
+  }, [vehicles, rentals, term, status, sort])
 
   const confirmDelete = async () => {
     const target = toDelete
@@ -101,20 +96,12 @@ export default function Vehicles() {
       </div>
 
       <div className="filters">
-        <SearchBar value={term} onChange={setTerm} placeholder="Search by name, model or plate" />
+        <SearchBar value={term} onChange={setTerm} placeholder="Search by name or plate" />
         <select className="select" value={status} onChange={(e) => setParam('status', e.target.value)} aria-label="Filter by status">
           <option value="all">Any status</option>
           <option value="available">Available</option>
           <option value="rented">On rent</option>
           <option value="maintenance">Maintenance</option>
-        </select>
-        <select className="select" value={type} onChange={(e) => setParam('type', e.target.value)} aria-label="Filter by type">
-          <option value="all">Any type</option>
-          {types.map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
-          ))}
         </select>
         <select className="select" value={sort} onChange={(e) => setSort(e.target.value)} aria-label="Sort vehicles">
           <option value="revenue">Highest revenue</option>
@@ -134,7 +121,7 @@ export default function Vehicles() {
             title={vehicles.length ? 'Nothing matches those filters' : 'No vehicles yet'}
             body={
               vehicles.length
-                ? 'Try a different status, type or search term.'
+                ? 'Try a different status or search term.'
                 : 'Add a vehicle to start tracking its rentals, earnings and balances.'
             }
             actionLabel={vehicles.length ? undefined : 'Add your first vehicle'}

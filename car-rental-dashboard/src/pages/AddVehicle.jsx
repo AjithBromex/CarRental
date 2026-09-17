@@ -5,14 +5,12 @@ import { useData } from '../context/DataContext'
 import { useToast } from '../context/ToastContext'
 import { Spinner } from '../components/Loading'
 import Plate from '../components/Plate'
-import { addVehicle, addVehicleWithId, createVehicleRef, updateVehicle, VEHICLE_TYPES } from '../services/vehicleService'
+import { addVehicle, addVehicleWithId, createVehicleRef, updateVehicle } from '../services/vehicleService'
 
 const BLANK = {
   name: '',
-  model: '',
   registrationNumber: '',
   image: '',
-  type: 'SUV',
   year: String(new Date().getFullYear()),
   notes: '',
   status: 'available',
@@ -105,10 +103,8 @@ export default function AddVehicle() {
     hydrated.current = true
     setForm({
       name: v.name || '',
-      model: v.model || '',
       registrationNumber: v.registrationNumber || '',
       image: v.image || '',
-      type: v.type || 'SUV',
       year: String(v.year || ''),
       notes: v.notes || '',
       status: v.status || 'available',
@@ -245,11 +241,6 @@ export default function AddVehicle() {
               </div>
 
               <div className="field">
-                <label htmlFor="model">Model</label>
-                <input id="model" className="input" value={form.model} onChange={set('model')} placeholder="Innova Crysta" />
-              </div>
-
-              <div className="field">
                 <label htmlFor="reg">
                   Registration number <span className="req">*</span>
                 </label>
@@ -269,17 +260,6 @@ export default function AddVehicle() {
                     <AlertCircle size={13} /> {errors.registrationNumber}
                   </span>
                 )}
-              </div>
-
-              <div className="field">
-                <label htmlFor="type">Vehicle type</label>
-                <select id="type" className="select" value={form.type} onChange={set('type')}>
-                  {VEHICLE_TYPES.map((t) => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
-                  ))}
-                </select>
               </div>
 
               <div className="field">
@@ -425,7 +405,7 @@ export default function AddVehicle() {
             </div>
             <h3 style={{ marginBottom: 4 }}>{form.name || 'Vehicle name'}</h3>
             <p className="hint" style={{ marginBottom: 12 }}>
-              {form.model || 'Model'} · {form.type} · {form.year || '—'}
+              {form.year || '—'}
             </p>
             <Plate number={form.registrationNumber || 'KL 00 AA 0000'} size="lg" />
             {form.notes && (

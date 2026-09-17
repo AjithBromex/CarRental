@@ -107,7 +107,7 @@ export default function VehicleAnalytics() {
                   <StatusBadge kind="vehicle" status={vehicle.status} />
                 </div>
                 <p className="hint" style={{ marginTop: 8 }}>
-                  {vehicle.model || vehicle.type} · {vehicle.type} · {vehicle.year}
+                  {vehicle.year}
                   {stats.lastRentalAt ? ` · last out ${fmtDate(stats.lastRentalAt)}` : ' · never rented'}
                 </p>
               </div>

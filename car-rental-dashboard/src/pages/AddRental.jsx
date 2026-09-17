@@ -227,7 +227,7 @@ export default function AddRental() {
                   <div className="row" style={{ marginTop: 6 }}>
                     <Plate number={vehicle.registrationNumber} />
                     <StatusBadge kind="vehicle" status={vehicle.status} />
-                    <span className="hint">{vehicle.model || vehicle.type}</span>
+                    {vehicle.year && <span className="hint">{vehicle.year}</span>}
                   </div>
                 )}
               </div>

@@ -19,7 +19,6 @@ function useGlobalSearch(term) {
       .filter(
         (v) =>
           v.name?.toLowerCase().includes(q) ||
-          v.model?.toLowerCase().includes(q) ||
           v.registrationNumber?.toLowerCase().includes(q)
       )
       .slice(0, 4)
