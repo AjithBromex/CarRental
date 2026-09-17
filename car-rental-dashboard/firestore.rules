@@ -1,56 +1,11 @@
 rules_version = '2';
-//email: admin@fleetline.local
-//uid: YUadCTU9tVhXttsE9rq1AcHvE492
 
-// Only the single admin account can read or write business data.
-// Admin UID: YUadCTU9tVhXttsE9rq1AcHvE492
+// Cloud Firestore Rules for Fleetline Car Rental Manager
+// Allows full access to vehicles, rentals, and analytics
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    function isAdmin() {
-      return request.auth != null && (
-        request.auth.uid == "YUadCTU9tVhXttsE9rq1AcHvE492" ||
-        request.auth.token.email == "admin@fleetline.local"
-      );
-    }
-
-    function validVehicle(d) {
-      return d.name is string && d.name.size() > 0
-        && d.registrationNumber is string && d.registrationNumber.size() > 0
-        && d.status in ['available', 'rented', 'maintenance'];
-    }
-
-    function validRental(d) {
-      return d.vehicleId is string && d.vehicleId.size() > 0
-        && d.driverName is string && d.driverName.size() > 0
-        && d.phoneNumber is string
-        && d.totalAmount is number && d.totalAmount >= 0
-        && d.amountPaid is number && d.amountPaid >= 0
-        && d.amountPaid <= d.totalAmount
-        && d.days is number && d.days > 0
-        && d.status in ['active', 'completed', 'cancelled'];
-    }
-
-    match /vehicles/{vehicleId} {
-      allow read, write: if request.auth != null && (
-        request.auth.uid == "YUadCTU9tVhXttsE9rq1AcHvE492" ||
-        request.auth.token.email == "admin@fleetline.local"
-      );
-    }
-
-    match /rentals/{rentalId} {
-      allow read, write: if request.auth != null && (
-        request.auth.uid == "YUadCTU9tVhXttsE9rq1AcHvE492" ||
-        request.auth.token.email == "admin@fleetline.local"
-      );
-    }
-
-    // Default rule for all other documents
     match /{document=**} {
-      allow read, write: if request.auth != null && (
-        request.auth.uid == "YUadCTU9tVhXttsE9rq1AcHvE492" ||
-        request.auth.token.email == "admin@fleetline.local"
-      );
+      allow read, write: if true;
     }
   }
 }
