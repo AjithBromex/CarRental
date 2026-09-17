@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { Spinner } from '../components/Loading'
 import { isConfigured } from '../firebase/firebaseConfig'
+import Brand from '../components/Brand'
 
 export default function Login() {
   const { user, loading, login, errorMessage } = useAuth()
@@ -23,15 +24,14 @@ export default function Login() {
     e.preventDefault()
     setError('')
 
-    if (!form.username.trim()) return setError('Enter your username or email.')
-    if (!form.password) return setError('Enter your password.')
-
-    if (!isConfigured)
-      return setError('Firebase isn’t configured yet. Copy .env.example to .env and add your project keys.')
+    if (!form.username.trim() || !form.password) {
+      setError('Please enter both username and password.')
+      return
+    }
 
     setBusy(true)
     try {
-      await login(form.username, form.password, remember)
+      await login(form.username.trim(), form.password, remember)
       navigate(location.state?.from || '/', { replace: true })
     } catch (err) {
       setError(errorMessage(err))
@@ -44,18 +44,7 @@ export default function Login() {
     <div className="login">
       <section className="login-art">
         <div className="row" style={{ justifyContent: 'space-between' }}>
-          <div className="row" style={{ gap: 12, alignItems: 'center' }}>
-            <img
-              src="/drift-logo.jpg"
-              alt="Drift.co"
-              style={{
-                height: 46,
-                width: 'auto',
-                borderRadius: 6,
-                filter: 'drop-shadow(0 2px 10px rgba(229, 27, 36, 0.4))',
-              }}
-            />
-          </div>
+          <Brand size="lg" />
         </div>
 
         <div className="login-pitch">
@@ -87,16 +76,7 @@ export default function Login() {
         <div className="login-card">
           <div className="row" style={{ justifyContent: 'space-between', marginBottom: 26, alignItems: 'center' }}>
             <div className="row mobile-only" style={{ gap: 10, alignItems: 'center' }}>
-              <img
-                src="/drift-logo.jpg"
-                alt="Drift.co"
-                style={{
-                  height: 36,
-                  width: 'auto',
-                  borderRadius: 4,
-                  filter: 'drop-shadow(0 2px 8px rgba(229, 27, 36, 0.35))',
-                }}
-              />
+              <Brand size="sm" />
             </div>
             <div style={{ flex: 1 }} />
             <button className="icon-btn" onClick={toggle} aria-label="Switch theme">

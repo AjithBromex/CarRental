@@ -261,6 +261,126 @@ td.num,
   letter-spacing: 0.02em;
 }
 
+/* ---------- Drift.co typographic brand ---------- */
+.drift-brand {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  user-select: none;
+  text-decoration: none;
+}
+
+.drift-title {
+  font-family: var(--font-head);
+  font-style: italic;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--text);
+  line-height: 1;
+  display: inline-flex;
+  align-items: baseline;
+}
+
+.drift-sm .drift-title {
+  font-size: 1.15rem;
+}
+
+.drift-md .drift-title {
+  font-size: 1.35rem;
+}
+
+.drift-lg .drift-title {
+  font-size: 1.75rem;
+}
+
+.drift-i-box {
+  position: relative;
+  display: inline-block;
+  line-height: 1;
+}
+
+.drift-i-dot {
+  position: absolute;
+  top: -0.05em;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0.22em;
+  height: 0.22em;
+  background: var(--amber);
+  border-radius: 1px;
+  box-shadow: 0 0 6px rgba(229, 27, 36, 0.6);
+}
+
+.drift-i-stem {
+  display: inline-block;
+}
+
+.drift-dot-red {
+  color: var(--amber);
+  font-weight: 900;
+  text-shadow: 0 0 6px rgba(229, 27, 36, 0.6);
+}
+
+.drift-sub {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.drift-sub-line {
+  flex: 1;
+  height: 1.5px;
+  background: var(--amber);
+  border-radius: 1px;
+  box-shadow: 0 0 6px rgba(229, 27, 36, 0.4);
+}
+
+.drift-sub-text {
+  font-family: var(--font-head);
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: var(--text);
+  text-transform: uppercase;
+  white-space: nowrap;
+  padding-left: 0.22em;
+}
+
+.drift-sm .drift-sub-text {
+  font-size: 0.45rem;
+}
+
+.drift-md .drift-sub-text {
+  font-size: 0.52rem;
+}
+
+.drift-lg .drift-sub-text {
+  font-size: 0.62rem;
+}
+
+.drift-collapsed {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  font-family: var(--font-head);
+  font-style: italic;
+  font-weight: 800;
+  font-size: 1.15rem;
+  color: var(--text);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.drift-collapsed .drift-dot-red {
+  color: var(--amber);
+  margin-left: 1px;
+}
+
 .rail-nav {
   flex: 1;
   overflow-y: auto;

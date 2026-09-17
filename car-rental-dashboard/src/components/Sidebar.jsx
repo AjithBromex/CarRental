@@ -10,6 +10,7 @@ import {
   LogOut,
 } from 'lucide-react'
 import { initials } from '../utils/format'
+import Brand from './Brand'
 
 const NAV = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -26,23 +27,8 @@ export default function Sidebar({ collapsed, open, onNavigate, user, onLogout })
 
   return (
     <aside className={`rail ${collapsed ? 'collapsed' : ''} ${open ? 'open' : ''}`}>
-      <div className="rail-head" style={{ overflow: 'hidden' }}>
-        {collapsed ? (
-          <span className="mark" title="Drift.co" style={{ fontWeight: 800, fontSize: '1.1rem' }}>D</span>
-        ) : (
-          <div className="row" style={{ gap: 10, alignItems: 'center', width: '100%' }}>
-            <img
-              src="/drift-logo.jpg"
-              alt="Drift.co"
-              style={{
-                height: 38,
-                maxWidth: '100%',
-                objectFit: 'contain',
-                filter: 'drop-shadow(0 2px 8px rgba(229, 27, 36, 0.35))',
-              }}
-            />
-          </div>
-        )}
+      <div className="rail-head">
+        <Brand collapsed={collapsed} />
       </div>
 
       <nav className="rail-nav">
