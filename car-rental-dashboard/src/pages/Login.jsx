@@ -17,14 +17,6 @@ export default function Login() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  // Pre-warm the Dashboard chunk and heavy chart dependencies in the background
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      import('./Dashboard')
-    }, 150)
-    return () => clearTimeout(timer)
-  }, [])
-
   if (!loading && user) return <Navigate to={location.state?.from || '/'} replace />
 
   const submit = async (e) => {

@@ -30,12 +30,6 @@ export default function Vehicles() {
   const [view, setView] = useState(() => localStorage.getItem('fleetline:vview') || 'grid')
   const [toDelete, setToDelete] = useState(null)
 
-  // Pre-warm the VehicleAnalytics and AddRental chunks in background
-  useEffect(() => {
-    import('./VehicleAnalytics')
-    import('./AddRental')
-  }, [])
-
   const status = params.get('status') || 'all'
   const type = params.get('type') || 'all'
 

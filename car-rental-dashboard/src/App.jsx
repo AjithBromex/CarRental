@@ -1,4 +1,3 @@
-import { lazy } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { DataProvider } from './context/DataContext'
@@ -7,19 +6,17 @@ import { ToastProvider } from './context/ToastContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import Layout from './components/Layout'
 import Login from './pages/Login'
-
-// Pages load on demand so the first paint after sign-in stays quick.
-const Dashboard = lazy(() => import('./pages/Dashboard'))
-const Vehicles = lazy(() => import('./pages/Vehicles'))
-const AddVehicle = lazy(() => import('./pages/AddVehicle'))
-const VehicleAnalytics = lazy(() => import('./pages/VehicleAnalytics'))
-const Rentals = lazy(() => import('./pages/Rentals'))
-const AddRental = lazy(() => import('./pages/AddRental'))
-const Payments = lazy(() => import('./pages/Payments'))
-const Drivers = lazy(() => import('./pages/Drivers'))
-const Analytics = lazy(() => import('./pages/Analytics'))
-const Settings = lazy(() => import('./pages/Settings'))
-const NotFound = lazy(() => import('./pages/NotFound'))
+import Dashboard from './pages/Dashboard'
+import Vehicles from './pages/Vehicles'
+import AddVehicle from './pages/AddVehicle'
+import VehicleAnalytics from './pages/VehicleAnalytics'
+import Rentals from './pages/Rentals'
+import AddRental from './pages/AddRental'
+import Payments from './pages/Payments'
+import Drivers from './pages/Drivers'
+import Analytics from './pages/Analytics'
+import Settings from './pages/Settings'
+import NotFound from './pages/NotFound'
 
 export default function App() {
   return (
