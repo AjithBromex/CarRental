@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Sun, Moon, Download, LogOut, ShieldCheck, Database } from 'lucide-react'
+import { Sun, Moon, Download, LogOut, ShieldCheck, Database, Copy } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 import { useData } from '../context/DataContext'
@@ -53,6 +53,9 @@ export default function Settings() {
               <div>
                 <strong style={{ display: 'block' }}>{name}</strong>
                 <span className="hint">{user?.email}</span>
+                <div style={{ marginTop: 6, fontSize: '0.78rem', color: 'var(--muted)' }}>
+                  UID: <code style={{ userSelect: 'all', background: 'var(--surface-2)', padding: '2px 6px', borderRadius: 4, color: 'var(--text)', fontFamily: 'monospace' }}>{user?.uid || 'Not loaded'}</code>
+                </div>
               </div>
             </div>
 
@@ -134,8 +137,7 @@ export default function Settings() {
           </header>
           <div className="panel-body">
             <p style={{ color: 'var(--muted)', fontSize: '0.88rem', marginBottom: 14 }}>
-              Firestore rules only let the admin UID read or write. Even with the Firebase keys, nobody
-              else can reach your vehicles or rentals.
+              Firestore rules only let the admin UID or authorized email read or write. Make sure to publish these in Firebase Console → Firestore Database → Rules:
             </p>
             <pre
               style={{
@@ -147,9 +149,11 @@ export default function Settings() {
                 overflowX: 'auto',
                 margin: 0,
                 color: 'var(--muted)',
+                fontFamily: 'monospace',
               }}
             >{`allow read, write: if request.auth != null
-  && request.auth.uid == 'ADMIN_UID';`}</pre>
+  && (request.auth.uid == "${user?.uid || 'YUadCTU9tVhXttsE9rq1AcHvE492'}"
+      || request.auth.token.email == "admin@fleetline.local");`}</pre>
             <p className="hint" style={{ marginTop: 10 }}>
               The full rule set ships in firestore.rules at the project root.
             </p>
