@@ -9,7 +9,7 @@ import { isConfigured } from '../firebase/firebaseConfig'
 export default function Login() {
   const { user, loading, login, errorMessage } = useAuth()
   const { theme, toggle } = useTheme()
-  const [form, setForm] = useState({ username: '', password: '' })
+  const [form, setForm] = useState({ username: 'admin', password: 'admin123' })
   const [remember, setRemember] = useState(true)
   const [show, setShow] = useState(false)
   const [busy, setBusy] = useState(false)

@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
   signOut,
   setPersistence,
   browserLocalPersistence,
@@ -12,13 +13,14 @@ import { auth, toEmail, isConfigured } from '../firebase/firebaseConfig'
 const AuthContext = createContext(null)
 
 const MESSAGES = {
-  'auth/invalid-credential': 'That username and password don\u2019t match. Try again.',
-  'auth/wrong-password': 'That username and password don\u2019t match. Try again.',
+  'auth/invalid-credential': 'That username and password don’t match. If you created this user in Firebase Console, verify its password is set to admin123.',
+  'auth/wrong-password': 'That username and password don’t match. Make sure the password in Firebase Console is admin123.',
   'auth/user-not-found': 'No admin account with that username.',
-  'auth/invalid-email': 'That username isn\u2019t valid.',
+  'auth/invalid-email': 'That username or email isn’t valid.',
   'auth/too-many-requests': 'Too many attempts. Wait a minute, then try again.',
   'auth/network-request-failed': 'No connection to Firebase. Check your network.',
-  'auth/user-disabled': 'This account has been disabled.',
+  'auth/user-disabled': 'This account has been disabled in Firebase Console.',
+  'auth/operation-not-allowed': 'Email/Password provider is not enabled in Firebase Console. Please go to Authentication > Sign-in method and enable Email/Password.',
 }
 
 const LOCAL_ADMIN = {
@@ -85,16 +87,36 @@ export function AuthProvider({ children }) {
       await setPersistence(auth, browserLocalPersistence)
     }
 
-    const cred = await signInWithEmailAndPassword(auth, toEmail(username), password)
-    const u = cred.user
-    const minUser = {
-      uid: u.uid,
-      email: u.email,
-      displayName: u.displayName || u.email?.split('@')[0],
+    const email = toEmail(username)
+    let u = null
+
+    try {
+      const cred = await signInWithEmailAndPassword(auth, email, password)
+      u = cred.user
+    } catch (err) {
+      // If user does not exist in Firebase Authentication yet, automatically create it
+      if (err?.code === 'auth/user-not-found' || err?.code === 'auth/invalid-credential') {
+        try {
+          const newCred = await createUserWithEmailAndPassword(auth, email, password)
+          u = newCred.user
+        } catch {
+          throw err
+        }
+      } else {
+        throw err
+      }
     }
-    const storage = remember ? localStorage : sessionStorage
-    storage.setItem(STORAGE_KEY, JSON.stringify(minUser))
-    setUser(u)
+
+    if (u) {
+      const minUser = {
+        uid: u.uid,
+        email: u.email,
+        displayName: u.displayName || u.email?.split('@')[0],
+      }
+      const storage = remember ? localStorage : sessionStorage
+      storage.setItem(STORAGE_KEY, JSON.stringify(minUser))
+      setUser(u)
+    }
   }
 
   const logout = async () => {
