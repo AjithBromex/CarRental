@@ -9,7 +9,7 @@ import { isConfigured } from '../firebase/firebaseConfig'
 export default function Login() {
   const { user, loading, login, errorMessage } = useAuth()
   const { theme, toggle } = useTheme()
-  const [form, setForm] = useState({ username: 'admin', password: 'admin123' })
+  const [form, setForm] = useState({ username: '', password: '' })
   const [remember, setRemember] = useState(true)
   const [show, setShow] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -18,7 +18,6 @@ export default function Login() {
   const location = useLocation()
 
   // Pre-warm the Dashboard chunk and heavy chart dependencies in the background
-  // while the user is viewing/filling out the login form so navigation is instantaneous.
   useEffect(() => {
     const timer = setTimeout(() => {
       import('./Dashboard')
@@ -32,14 +31,11 @@ export default function Login() {
     e.preventDefault()
     setError('')
 
-    if (!form.username.trim()) return setError('Enter your username.')
+    if (!form.username.trim()) return setError('Enter your username or email.')
     if (!form.password) return setError('Enter your password.')
 
-    const cleanUser = form.username.trim().toLowerCase()
-    const isAdminCreds = (cleanUser === 'admin' || cleanUser === 'admin@fleetline.local') && form.password === 'admin123'
-
-    if (!isConfigured && !isAdminCreds)
-      return setError('Firebase isn\u2019t configured yet. Copy .env.example to .env and add your project keys.')
+    if (!isConfigured)
+      return setError('Firebase isn’t configured yet. Copy .env.example to .env and add your project keys.')
 
     setBusy(true)
     try {
@@ -104,18 +100,18 @@ export default function Login() {
           </div>
 
           <h2>Sign in</h2>
-          <p>Owner access only. One account runs the whole dashboard.</p>
+          <p>Owner access only. Sign in with your Firebase admin account.</p>
 
           <form onSubmit={submit} className="stack" style={{ gap: 14 }} noValidate>
             <div className="field">
-              <label htmlFor="username">Username</label>
+              <label htmlFor="username">Username or Email</label>
               <input
                 id="username"
                 className={`input ${error && !form.username ? 'invalid' : ''}`}
                 value={form.username}
                 autoComplete="username"
                 autoCapitalize="none"
-                placeholder="admin"
+                placeholder="admin@fleetline.local"
                 onChange={(e) => setForm({ ...form, username: e.target.value })}
               />
             </div>
@@ -170,12 +166,6 @@ export default function Login() {
               )}
             </button>
           </form>
-
-          <p className="hint" style={{ marginTop: 18, lineHeight: 1.5 }}>
-            <strong>Default sign-in:</strong> Username: <code>admin</code> · Password: <code>admin123</code>
-            <br />
-            Or create/use your owner account in the Firebase Console.
-          </p>
         </div>
       </section>
     </div>
