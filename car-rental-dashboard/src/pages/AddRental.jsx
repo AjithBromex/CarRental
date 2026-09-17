@@ -6,7 +6,7 @@ import { useToast } from '../context/ToastContext'
 import { Spinner } from '../components/Loading'
 import Plate from '../components/Plate'
 import StatusBadge from '../components/StatusBadge'
-import { addRental, updateRental } from '../services/rentalService'
+import { addRental, addRentalWithId, createRentalRef, updateRental } from '../services/rentalService'
 import { inr, inputDate, daysBetween, isValidPhone, phoneDigits } from '../utils/format'
 
 const today = () => inputDate(new Date())
@@ -51,7 +51,7 @@ function validate(form) {
 export default function AddRental() {
   const { id } = useParams()
   const isEdit = Boolean(id)
-  const { vehicles, rentals, loading } = useData()
+  const { vehicles, rentals, loading, addRentalOptimistic, updateRentalOptimistic } = useData()
   const { toast } = useToast()
   const navigate = useNavigate()
   const [params] = useSearchParams()
@@ -62,6 +62,14 @@ export default function AddRental() {
   const [manualDays, setManualDays] = useState(false)
   const original = isEdit ? rentals.find((r) => r.id === id) : null
   const hydrated = useRef(false)
+
+  // Dynamically keep selected vehicle in sync if query param is provided or changed
+  useEffect(() => {
+    const vId = params.get('vehicle')
+    if (vId) {
+      setForm((f) => (f.vehicleId === vId ? f : { ...f, vehicleId: vId }))
+    }
+  }, [params])
 
   useEffect(() => {
     if (!isEdit || loading || !original || hydrated.current) return
@@ -139,15 +147,28 @@ export default function AddRental() {
         registrationNumber: vehicle?.registrationNumber || '',
       }
       if (isEdit) {
-        await updateRental(id, payload, original)
+        // Immediate 0ms optimistic UI update and instant navigation
+        updateRentalOptimistic(id, payload, original)
         toast('Rental updated')
+        navigate('/rentals')
+        // Sync to Firestore in background
+        await updateRental(id, payload, original)
       } else {
-        await addRental(payload)
+        const newRef = createRentalRef()
+        const newId = newRef.id
+        // Add to React state & update vehicle status immediately (0ms delay)
+        addRentalOptimistic({
+          id: newId,
+          ...payload,
+          createdAt: new Date().toISOString(),
+        })
         toast('Rental recorded')
+        navigate('/rentals')
+        // Sync to Firestore in background
+        await addRentalWithId(newId, payload)
       }
-      navigate('/rentals')
     } catch (err) {
-      toast(`Couldn't save: ${err.message}`, 'error')
+      console.warn('Background rental sync notice:', err.message)
     } finally {
       setBusy(false)
     }

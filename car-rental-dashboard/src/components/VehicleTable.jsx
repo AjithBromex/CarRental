@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { Pencil, Trash2 } from 'lucide-react'
+import { Pencil, Trash2, Plus } from 'lucide-react'
 import StatusBadge from './StatusBadge'
 import Plate from './Plate'
 import { inr, num } from '../utils/format'
@@ -45,6 +45,16 @@ export default function VehicleTable({ vehicles, onEdit, onDelete }) {
               </td>
               <td onClick={(e) => e.stopPropagation()}>
                 <div className="row-actions">
+                  {v.status === 'available' && (
+                    <button
+                      className="btn btn-sm btn-primary"
+                      style={{ padding: '3px 8px', height: 26, fontSize: '0.78rem' }}
+                      onClick={() => navigate(`/rentals/new?vehicle=${v.id}`)}
+                      title={`Rent ${v.name}`}
+                    >
+                      <Plus size={12} /> Rent
+                    </button>
+                  )}
                   <button className="icon-btn ghost" style={{ width: 30, height: 30 }} onClick={() => onEdit(v)} aria-label={`Edit ${v.name}`}>
                     <Pencil size={14} />
                   </button>

@@ -51,7 +51,31 @@ export function AuthProvider({ children }) {
       return
     }
     return onAuthStateChanged(auth, (u) => {
-      setUser(u)
+      if (u) {
+        const minUser = {
+          uid: u.uid,
+          email: u.email,
+          displayName: u.displayName || u.email?.split('@')[0],
+        }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(minUser))
+        setUser(u)
+      } else {
+        const curSaved = localStorage.getItem(STORAGE_KEY) || sessionStorage.getItem(STORAGE_KEY)
+        if (curSaved) {
+          try {
+            const parsed = JSON.parse(curSaved)
+            if (parsed.uid !== 'admin-local') {
+              localStorage.removeItem(STORAGE_KEY)
+              sessionStorage.removeItem(STORAGE_KEY)
+              setUser(null)
+            }
+          } catch {
+            setUser(null)
+          }
+        } else {
+          setUser(null)
+        }
+      }
       setLoading(false)
     })
   }, [])
@@ -65,8 +89,20 @@ export function AuthProvider({ children }) {
       return
     }
 
-    await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence)
-    await signInWithEmailAndPassword(auth, toEmail(username), password)
+    if (!remember) {
+      await setPersistence(auth, browserSessionPersistence)
+    }
+
+    const cred = await signInWithEmailAndPassword(auth, toEmail(username), password)
+    const u = cred.user
+    const minUser = {
+      uid: u.uid,
+      email: u.email,
+      displayName: u.displayName || u.email?.split('@')[0],
+    }
+    const storage = remember ? localStorage : sessionStorage
+    storage.setItem(STORAGE_KEY, JSON.stringify(minUser))
+    setUser(u)
   }
 
   const logout = async () => {

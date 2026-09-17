@@ -102,14 +102,30 @@ export default function Dashboard() {
       ) : (
         <>
           <div className="stat-grid">
-            <StatCard icon={Car} label="Total vehicles" value={num(totals.totalVehicles)} foot={`${num(totals.maintenance)} in maintenance`} accent="var(--amber)" accentSoft="var(--amber-soft)" />
-            <StatCard icon={KeyRound} label="On rent now" value={num(totals.rented)} foot={`${totals.utilisation.toFixed(0)}% of the fleet working`} accent="var(--blue)" accentSoft="var(--blue-soft)" />
-            <StatCard icon={CheckCircle2} label="Available" value={num(totals.available)} foot="Ready to hand over" accent="var(--green)" accentSoft="var(--green-soft)" />
-            <StatCard icon={Activity} label="Active rentals" value={num(totals.activeRentals)} foot={`${num(totals.completedRentals)} completed`} accent="var(--violet)" accentSoft="rgba(139,108,240,0.14)" />
-            <StatCard icon={IndianRupee} label="Rental revenue" value={inr(totals.revenue)} foot={`Across ${num(totals.totalRentals)} rentals`} accent="var(--amber)" accentSoft="var(--amber-soft)" />
-            <StatCard icon={Wallet} label="Collected" value={inr(totals.paid)} foot={`${totals.collectionRate.toFixed(0)}% of what you billed`} accent="var(--green)" accentSoft="var(--green-soft)" />
-            <StatCard icon={AlertCircle} label="Still owed" value={inr(totals.pending)} foot="Chase these on the Payments page" accent="var(--red)" accentSoft="var(--red-soft)" />
-            <StatCard icon={CalendarDays} label="Rental days" value={num(totals.totalDays)} foot={`${totals.avgRentalDays.toFixed(1)} days per rental`} accent="var(--blue)" accentSoft="var(--blue-soft)" />
+            <Link to="/vehicles" style={{ textDecoration: 'none', color: 'inherit', display: 'contents' }}>
+              <StatCard icon={Car} label="Total vehicles" value={num(totals.totalVehicles)} foot={`${num(totals.maintenance)} in maintenance`} accent="var(--amber)" accentSoft="var(--amber-soft)" />
+            </Link>
+            <Link to="/rentals?status=active" style={{ textDecoration: 'none', color: 'inherit', display: 'contents' }}>
+              <StatCard icon={KeyRound} label="On rent now" value={num(totals.rented)} foot={`${totals.utilisation.toFixed(0)}% of the fleet working`} accent="var(--blue)" accentSoft="var(--blue-soft)" />
+            </Link>
+            <Link to="/vehicles?status=available" style={{ textDecoration: 'none', color: 'inherit', display: 'contents' }}>
+              <StatCard icon={CheckCircle2} label="Available" value={num(totals.available)} foot="Ready to hand over" accent="var(--green)" accentSoft="var(--green-soft)" />
+            </Link>
+            <Link to="/rentals?status=active" style={{ textDecoration: 'none', color: 'inherit', display: 'contents' }}>
+              <StatCard icon={Activity} label="Active rentals" value={num(totals.activeRentals)} foot={`${num(totals.completedRentals)} completed`} accent="var(--violet)" accentSoft="rgba(139,108,240,0.14)" />
+            </Link>
+            <Link to="/analytics" style={{ textDecoration: 'none', color: 'inherit', display: 'contents' }}>
+              <StatCard icon={IndianRupee} label="Rental revenue" value={inr(totals.revenue)} foot={`Across ${num(totals.totalRentals)} rentals`} accent="var(--amber)" accentSoft="var(--amber-soft)" />
+            </Link>
+            <Link to="/payments" style={{ textDecoration: 'none', color: 'inherit', display: 'contents' }}>
+              <StatCard icon={Wallet} label="Collected" value={inr(totals.paid)} foot={`${totals.collectionRate.toFixed(0)}% of what you billed`} accent="var(--green)" accentSoft="var(--green-soft)" />
+            </Link>
+            <Link to="/payments" style={{ textDecoration: 'none', color: 'inherit', display: 'contents' }}>
+              <StatCard icon={AlertCircle} label="Still owed" value={inr(totals.pending)} foot="Chase these on the Payments page" accent="var(--red)" accentSoft="var(--red-soft)" />
+            </Link>
+            <Link to="/rentals" style={{ textDecoration: 'none', color: 'inherit', display: 'contents' }}>
+              <StatCard icon={CalendarDays} label="Rental days" value={num(totals.totalDays)} foot={`${totals.avgRentalDays.toFixed(1)} days per rental`} accent="var(--blue)" accentSoft="var(--blue-soft)" />
+            </Link>
           </div>
 
           <div className="grid-main" style={{ marginBottom: 16 }}>

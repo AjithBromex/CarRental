@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Car, Plus, LayoutGrid, List } from 'lucide-react'
 import { useData } from '../context/DataContext'
@@ -29,6 +29,12 @@ export default function Vehicles() {
   const [sort, setSort] = useState('revenue')
   const [view, setView] = useState(() => localStorage.getItem('fleetline:vview') || 'grid')
   const [toDelete, setToDelete] = useState(null)
+
+  // Pre-warm the VehicleAnalytics and AddRental chunks in background
+  useEffect(() => {
+    import('./VehicleAnalytics')
+    import('./AddRental')
+  }, [])
 
   const status = params.get('status') || 'all'
   const type = params.get('type') || 'all'
@@ -125,7 +131,7 @@ export default function Vehicles() {
         </select>
       </div>
 
-      {loading ? (
+      {loading && vehicles.length === 0 ? (
         <SkeletonCards />
       ) : list.length === 0 ? (
         <section className="panel">

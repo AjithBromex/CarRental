@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, AlertCircle, Sun, Moon } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
@@ -16,6 +16,15 @@ export default function Login() {
   const [error, setError] = useState('')
   const navigate = useNavigate()
   const location = useLocation()
+
+  // Pre-warm the Dashboard chunk and heavy chart dependencies in the background
+  // while the user is viewing/filling out the login form so navigation is instantaneous.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      import('./Dashboard')
+    }, 150)
+    return () => clearTimeout(timer)
+  }, [])
 
   if (!loading && user) return <Navigate to={location.state?.from || '/'} replace />
 

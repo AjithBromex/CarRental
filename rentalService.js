@@ -38,6 +38,21 @@ const clean = (r) => {
  */
 const vehicleStatusFor = (rentalStatus) => (rentalStatus === 'active' ? 'rented' : 'available')
 
+export const createRentalRef = () => doc(rentalsRef)
+
+export const addRentalWithId = async (id, data) => {
+  const payload = clean(data)
+  const ref = doc(db, 'rentals', id)
+  const batch = writeBatch(db)
+  batch.set(ref, { ...payload, createdAt: serverTimestamp() })
+  batch.update(doc(db, 'vehicles', payload.vehicleId), {
+    status: vehicleStatusFor(payload.status),
+    updatedAt: serverTimestamp(),
+  })
+  await batch.commit()
+  return id
+}
+
 export const addRental = async (data) => {
   const payload = clean(data)
   const ref = doc(rentalsRef)

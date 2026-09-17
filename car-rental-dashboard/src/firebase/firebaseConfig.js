@@ -1,6 +1,10 @@
 import { initializeApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
-import { getFirestore } from 'firebase/firestore'
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+} from 'firebase/firestore'
 
 const clean = (val) => (val ? String(val).replace(/^[",'\s]+|[",'\s]+$/g, '') : '')
 
@@ -28,7 +32,13 @@ const fallbackConfig = {
 const app = initializeApp(isConfigured ? firebaseConfig : fallbackConfig)
 
 export const auth = getAuth(app)
-export const db = getFirestore(app)
+
+// Use persistent IndexedDB cache for instant query reads across sessions with multi-tab support
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager(),
+  }),
+})
 
 // The owner types a username; we turn it into the account's email address.
 export const ADMIN_DOMAIN = import.meta.env.VITE_ADMIN_DOMAIN || 'fleetline.local'

@@ -54,7 +54,12 @@ export default function VehicleAnalytics() {
   const stats = statsFor(statsByVehicle, id)
   const months = useMemo(() => monthlySeries(mine, 6), [mine])
 
-  if (loading) return <PageLoader label="Loading vehicle" />
+  // Pre-warm the AddRental page so clicking 'Rent this out' is instantaneous
+  useEffect(() => {
+    import('./AddRental')
+  }, [])
+
+  if (loading && !vehicle) return <PageLoader label="Loading vehicle" />
 
   if (!vehicle)
     return (

@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { BarChart3, Pencil, Trash2 } from 'lucide-react'
+import { BarChart3, Pencil, Trash2, Plus } from 'lucide-react'
 import StatusBadge from './StatusBadge'
 import Plate from './Plate'
 import { inrShort, num } from '../utils/format'
@@ -52,9 +52,20 @@ export default function VehicleCard({ vehicle, onEdit, onDelete }) {
         </div>
 
         <div className="vcard-foot" onClick={(e) => e.stopPropagation()}>
-          <Link to={`/vehicles/${vehicle.id}`} className="btn btn-sm" style={{ flex: 1 }}>
-            <BarChart3 size={14} /> Analytics
-          </Link>
+          {vehicle.status === 'available' ? (
+            <Link to={`/rentals/new?vehicle=${vehicle.id}`} className="btn btn-sm btn-primary" style={{ flex: 1 }}>
+              <Plus size={14} /> Rent
+            </Link>
+          ) : (
+            <Link to={`/vehicles/${vehicle.id}`} className="btn btn-sm" style={{ flex: 1 }}>
+              <BarChart3 size={14} /> Analytics
+            </Link>
+          )}
+          {vehicle.status === 'available' && (
+            <Link to={`/vehicles/${vehicle.id}`} className="icon-btn" style={{ width: 34, height: 32 }} title="Analytics" aria-label={`View analytics for ${vehicle.name}`}>
+              <BarChart3 size={14} />
+            </Link>
+          )}
           <button className="icon-btn" style={{ width: 34, height: 32 }} onClick={() => onEdit(vehicle)} aria-label={`Edit ${vehicle.name}`}>
             <Pencil size={14} />
           </button>
