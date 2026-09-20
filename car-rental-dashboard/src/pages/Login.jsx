@@ -82,7 +82,7 @@ export default function Login() {
         <div className="glass-card">
           <div className="glass-card-header">
             <div className="glass-brand-row">
-              <Brand size="lg" withCar />
+              <Brand size="lg" withCar theme="dark" />
             </div>
             <h1 className="glass-title">Login</h1>
           </div>

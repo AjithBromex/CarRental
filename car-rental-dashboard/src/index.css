@@ -49,15 +49,15 @@
 }
 
 [data-theme='light'] {
-  --bg: #eceff5;
-  --surface: rgba(255, 255, 255, 0.78);
-  --surface-2: rgba(255, 255, 255, 0.52);
-  --surface-3: rgba(235, 240, 248, 0.85);
+  --bg: #edf1f7;
+  --surface: rgba(255, 255, 255, 0.82);
+  --surface-2: rgba(255, 255, 255, 0.62);
+  --surface-3: rgba(235, 240, 248, 0.9);
   --line: rgba(0, 0, 0, 0.09);
   --line-soft: rgba(0, 0, 0, 0.05);
-  --text: #0e1218;
-  --muted: #566474;
-  --faint: #8493a3;
+  --text: #0b0f17;
+  --muted: #2d3748;
+  --faint: #4a5568;
   --shadow-sm: 0 4px 14px rgba(16, 24, 32, 0.08);
   --shadow: 0 14px 35px rgba(16, 24, 32, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.8);
   --overlay: rgba(16, 20, 28, 0.45);
@@ -296,6 +296,35 @@ td.num,
   bottom: 8%;
 }
 
+/* Ambient background mesh in light mode: gentle luminous accents instead of dark/muddy blobs */
+[data-theme='light'] .dashboard-ambient-mesh {
+  opacity: 0.55;
+}
+
+[data-theme='light'] .dashboard-blob {
+  filter: blur(100px);
+}
+
+[data-theme='light'] .dashboard-blob.blob-1 {
+  background: radial-gradient(circle, rgba(229, 27, 36, 0.16) 0%, rgba(254, 205, 211, 0.12) 50%, transparent 75%);
+}
+
+[data-theme='light'] .dashboard-blob.blob-2 {
+  background: radial-gradient(circle, rgba(225, 29, 72, 0.13) 0%, rgba(254, 226, 226, 0.08) 55%, transparent 75%);
+}
+
+[data-theme='light'] .dashboard-blob.blob-3 {
+  background: radial-gradient(circle, rgba(147, 51, 234, 0.09) 0%, rgba(243, 232, 255, 0.06) 55%, transparent 75%);
+}
+
+[data-theme='light'] .dashboard-blob.blob-4 {
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.09) 0%, rgba(219, 234, 254, 0.06) 55%, transparent 75%);
+}
+
+[data-theme='light'] .dashboard-stripe {
+  opacity: 0.05;
+}
+
 /* ---------- app shell ---------- */
 
 .shell {
@@ -467,6 +496,17 @@ td.num,
 [data-theme='light'] .light-asset {
   display: block !important;
   filter: drop-shadow(0 2px 8px rgba(229, 27, 36, 0.2));
+}
+
+/* Ensure brand assets inside dark containers (like the glass login card/viewport) always display the high-contrast white logo */
+.glass-login-viewport .dark-asset,
+.glass-card .dark-asset {
+  display: block !important;
+}
+
+.glass-login-viewport .light-asset,
+.glass-card .light-asset {
+  display: none !important;
 }
 
 .rail-nav {
@@ -694,8 +734,16 @@ td.num,
 
 .page-head p {
   color: var(--muted);
-  font-size: 0.9rem;
-  margin-top: 4px;
+  font-size: 0.92rem;
+  font-weight: 500;
+  margin-top: 5px;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+}
+
+[data-theme='light'] .page-head p {
+  color: #334155;
+  font-weight: 500;
 }
 
 .head-actions {
@@ -2320,8 +2368,14 @@ td.right {
 
 .empty p {
   color: var(--muted);
-  font-size: 0.88rem;
-  max-width: 40ch;
+  font-size: 0.9rem;
+  max-width: 44ch;
+  line-height: 1.5;
+}
+
+[data-theme='light'] .empty p {
+  color: #334155;
+  font-weight: 500;
 }
 
 .skeleton {
@@ -2658,8 +2712,25 @@ td.right {
     height: 42px;
   }
 
+  .page-head {
+    margin-bottom: 16px;
+    gap: 12px;
+  }
+
   .page-head h1 {
-    font-size: 1.3rem;
+    font-size: 1.35rem;
+    line-height: 1.25;
+  }
+
+  .page-head p {
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.45;
+  }
+
+  [data-theme='light'] .page-head p {
+    color: #1e293b;
+    font-weight: 600;
   }
 
   .toasts {
