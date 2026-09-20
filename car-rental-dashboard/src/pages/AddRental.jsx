@@ -7,7 +7,7 @@ import { Spinner } from '../components/Loading'
 import Plate from '../components/Plate'
 import StatusBadge from '../components/StatusBadge'
 import { addRental, addRentalWithId, createRentalRef, updateRental } from '../services/rentalService'
-import { inr, inputDate, daysBetween, addDays, isValidPhone, phoneDigits } from '../utils/format'
+import { inr, inputDate, daysBetween, addDays, isValidPhone, phoneDigits, isRentalDueComplete } from '../utils/format'
 
 const today = () => inputDate(new Date())
 
@@ -22,7 +22,8 @@ const BLANK = {
   totalAmount: '',
   amountPaid: '',
   notes: '',
-  status: 'active',
+  status: 'completed',
+  userChangedStatus: false,
   damageCost: '',
   damageDescription: '',
 }
@@ -87,6 +88,7 @@ export default function AddRental() {
       amountPaid: String(original.amountPaid ?? ''),
       notes: original.notes || '',
       status: original.status || 'active',
+      userChangedStatus: Boolean(original.manualStatus),
       damageCost: original.damageCost ? String(original.damageCost) : '',
       damageDescription: original.damageDescription || '',
     })
@@ -102,6 +104,9 @@ export default function AddRental() {
       } else if (value && f.endDate && value > f.endDate) {
         next.endDate = value
       }
+      if (!isEdit && !f.userChangedStatus && next.endDate) {
+        next.status = isRentalDueComplete({ status: 'active', endDate: next.endDate }) ? 'completed' : 'active'
+      }
       return next
     })
     setErrors((x) => ({ ...x, startDate: undefined, endDate: undefined }))
@@ -115,6 +120,9 @@ export default function AddRental() {
         const d = daysBetween(f.startDate, value)
         next.days = String(d)
       }
+      if (!isEdit && !f.userChangedStatus && value) {
+        next.status = isRentalDueComplete({ status: 'active', endDate: value }) ? 'completed' : 'active'
+      }
       return next
     })
     setErrors((x) => ({ ...x, endDate: undefined, days: undefined }))
@@ -127,6 +135,9 @@ export default function AddRental() {
       const count = parseInt(value, 10)
       if (f.startDate && count >= 1) {
         next.endDate = addDays(f.startDate, count)
+      }
+      if (!isEdit && !f.userChangedStatus && next.endDate) {
+        next.status = isRentalDueComplete({ status: 'active', endDate: next.endDate }) ? 'completed' : 'active'
       }
       return next
     })
@@ -166,6 +177,12 @@ export default function AddRental() {
     if (errors.phoneNumber) setErrors((x) => ({ ...x, phoneNumber: undefined }))
   }
 
+  const onStatusChange = (e) => {
+    const value = e.target.value
+    setForm((f) => ({ ...f, status: value, userChangedStatus: true }))
+    if (errors.status) setErrors((x) => ({ ...x, status: undefined }))
+  }
+
   const submit = async (e) => {
     e.preventDefault()
     const found = validate(form)
@@ -177,12 +194,14 @@ export default function AddRental() {
 
     setBusy(true)
     try {
+      const isDue = isRentalDueComplete({ status: 'active', endDate: form.endDate, manualStatus: false })
       const payload = {
         ...form,
         damageCost: Math.max(0, Number(form.damageCost) || 0),
         damageDescription: form.damageDescription.trim(),
         vehicleName: vehicle?.name || '',
         registrationNumber: vehicle?.registrationNumber || '',
+        manualStatus: form.userChangedStatus && form.status === 'active' && isDue,
       }
       if (isEdit) {
         // Immediate 0ms optimistic UI update and instant navigation
@@ -369,14 +388,14 @@ export default function AddRental() {
 
               <div className="field">
                 <label htmlFor="status">Rental status</label>
-                <select id="status" className="select" value={form.status} onChange={set('status')}>
+                <select id="status" className="select" value={form.status} onChange={onStatusChange}>
                   <option value="active">Active — vehicle is out</option>
                   <option value="completed">Completed — vehicle returned</option>
                   <option value="cancelled">Cancelled</option>
                 </select>
                 <span className="hint">
                   {form.status === 'active'
-                    ? 'The vehicle will show as on rent.'
+                    ? 'The vehicle will show as on rent until the end date arrives.'
                     : 'The vehicle goes back to available.'}
                 </span>
               </div>

@@ -53,7 +53,7 @@ import { inr, inrShort, num, fmtDate } from '../utils/format'
 
 export default function VehicleAnalytics() {
   const { id } = useParams()
-  const { vehicles, rentals, statsByVehicle, loading, updateVehicleOptimistic } = useData()
+  const { vehicles, rentals, statsByVehicle, loading, updateVehicleOptimistic, updateRentalOptimistic } = useData()
   const { toast } = useToast()
   const navigate = useNavigate()
   const [toDeleteRental, setToDeleteRental] = useState(null)
@@ -588,7 +588,8 @@ export default function VehicleAnalytics() {
               hideVehicle
               onStatusChange={async (r, next) => {
                 try {
-                  await setRentalStatus(r, next)
+                  updateRentalOptimistic(r.id, { status: next, manualStatus: next === 'active' }, r)
+                  await setRentalStatus(r, next, true)
                   toast(next === 'completed' ? `${vehicle.name} is back and available` : 'Rental updated')
                 } catch (e) {
                   toast(`Couldn't update: ${e.message}`, 'error')

@@ -23,7 +23,7 @@ const inRange = (date, range) => {
 }
 
 export default function Rentals() {
-  const { rentals, vehicles, loading } = useData()
+  const { rentals, vehicles, loading, updateRentalOptimistic } = useData()
   const { toast } = useToast()
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
@@ -70,7 +70,8 @@ export default function Rentals() {
 
   const changeStatus = async (rental, next) => {
     try {
-      await setRentalStatus(rental, next)
+      updateRentalOptimistic(rental.id, { status: next, manualStatus: next === 'active' }, rental)
+      await setRentalStatus(rental, next, true)
       toast(
         next === 'active'
           ? `${rental.vehicleName} marked as on rent`

@@ -7,14 +7,14 @@ import {
   Timestamp,
 } from 'firebase/firestore'
 import { db } from '../firebase/firebaseConfig'
-import { toDate } from '../utils/format'
+import { toDate, isRentalDueComplete } from '../utils/format'
 
 export const rentalsRef = collection(db, 'rentals')
 
 const clean = (r) => {
   const total = Number(r.totalAmount) || 0
   const paid = Number(r.amountPaid) || 0
-  return {
+  const data = {
     vehicleId: r.vehicleId,
     vehicleName: (r.vehicleName || '').trim(),
     registrationNumber: (r.registrationNumber || '').trim().toUpperCase(),
@@ -32,6 +32,9 @@ const clean = (r) => {
     notes: (r.notes || '').trim(),
     status: r.status || 'active',
   }
+  if (r.manualStatus !== undefined) data.manualStatus = Boolean(r.manualStatus)
+  if (r.autoCompleted !== undefined) data.autoCompleted = Boolean(r.autoCompleted)
+  return data
 }
 
 /**
@@ -87,9 +90,16 @@ export const updateRental = async (id, data, previous) => {
   await batch.commit()
 }
 
-export const setRentalStatus = async (rental, status) => {
+export const setRentalStatus = async (rental, status, isManual = false) => {
   const batch = writeBatch(db)
-  batch.update(doc(db, 'rentals', rental.id), { status, updatedAt: serverTimestamp() })
+  const updateData = { status, updatedAt: serverTimestamp() }
+  if (isManual) {
+    updateData.manualStatus = status === 'active'
+    if (status === 'active') {
+      updateData.autoCompleted = false
+    }
+  }
+  batch.update(doc(db, 'rentals', rental.id), updateData)
   if (rental.vehicleId) {
     batch.update(doc(db, 'vehicles', rental.vehicleId), {
       status: vehicleStatusFor(status),
@@ -97,6 +107,49 @@ export const setRentalStatus = async (rental, status) => {
     })
   }
   await batch.commit()
+}
+
+/**
+ * Automatically marks active rentals as 'completed' when their end date arrives or passes,
+ * and sets the vehicle status back to 'available' if no other active rentals exist on it.
+ */
+export const autoCompleteDueRentals = async (rentals = [], vehicles = []) => {
+  if (!Array.isArray(rentals) || rentals.length === 0) return []
+
+  const due = rentals.filter(isRentalDueComplete)
+  if (due.length === 0) return []
+
+  const batch = writeBatch(db)
+  const dueIds = new Set(due.map((r) => r.id))
+  const vehicleIdsToCheck = new Set(due.map((r) => r.vehicleId).filter(Boolean))
+
+  for (const r of due) {
+    batch.update(doc(db, 'rentals', r.id), {
+      status: 'completed',
+      autoCompleted: true,
+      updatedAt: serverTimestamp(),
+    })
+  }
+
+  for (const vId of vehicleIdsToCheck) {
+    const hasOtherActive = rentals.some(
+      (other) => other.vehicleId === vId && other.status === 'active' && !dueIds.has(other.id)
+    )
+    if (!hasOtherActive) {
+      batch.update(doc(db, 'vehicles', vId), {
+        status: 'available',
+        updatedAt: serverTimestamp(),
+      })
+    }
+  }
+
+  try {
+    await batch.commit()
+    return due
+  } catch (err) {
+    console.warn('Auto-complete due rentals sync error:', err.message)
+    return []
+  }
 }
 
 export const recordPayment = async (rental, amount) => {

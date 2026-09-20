@@ -1,9 +1,10 @@
-import { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { onSnapshot, query, orderBy } from 'firebase/firestore'
 import { vehiclesRef } from '../services/vehicleService'
-import { rentalsRef } from '../services/rentalService'
+import { rentalsRef, autoCompleteDueRentals } from '../services/rentalService'
 import { useAuth } from './AuthContext'
 import { buildNotifications, buildVehicleStats, fleetTotals } from '../utils/analytics'
+import { isRentalDueComplete } from '../utils/format'
 
 const DataContext = createContext(null)
 
@@ -35,13 +36,20 @@ const saveCache = (key, data) => {
 export function DataProvider({ children }) {
   const { user } = useAuth()
   const cachedVehicles = useMemo(() => loadCached(VEHICLES_CACHE_KEY), [])
-  const cachedRentals = useMemo(() => loadCached(RENTALS_CACHE_KEY), [])
+  const cachedRentals = useMemo(() => {
+    const raw = loadCached(RENTALS_CACHE_KEY)
+    if (!Array.isArray(raw)) return null
+    return raw.map((r) =>
+      isRentalDueComplete(r) ? { ...r, status: 'completed', autoCompleted: true } : r
+    )
+  }, [])
 
   // Instantly hydrate from cache if available so dashboard renders immediately in 0ms
   const [vehicles, setVehicles] = useState(() => cachedVehicles || [])
   const [rentals, setRentals] = useState(() => cachedRentals || [])
   const [loading, setLoading] = useState(() => !Boolean(cachedVehicles && cachedRentals))
   const [error, setError] = useState(null)
+  const isSyncingRef = useRef(false)
 
   useEffect(() => {
     if (!user) {
@@ -90,10 +98,23 @@ export function DataProvider({ children }) {
       query(rentalsRef, orderBy('startDate', 'desc')),
       (snap) => {
         const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
-        setRentals(list)
-        saveCache(RENTALS_CACHE_KEY, list)
+        // Immediately mark due rentals as completed in memory
+        const processed = list.map((r) =>
+          isRentalDueComplete(r) ? { ...r, status: 'completed', autoCompleted: true } : r
+        )
+        setRentals(processed)
+        saveCache(RENTALS_CACHE_KEY, processed)
         gotRentals = true
         done()
+
+        // Background check: sync any due rentals to Firestore
+        const due = list.filter(isRentalDueComplete)
+        if (due.length > 0 && !isSyncingRef.current) {
+          isSyncingRef.current = true
+          autoCompleteDueRentals(list, vehicles).finally(() => {
+            isSyncingRef.current = false
+          })
+        }
       },
       (e) => {
         console.warn('Firestore rentals listener error:', e.message)
@@ -109,6 +130,37 @@ export function DataProvider({ children }) {
       unsubRentals()
     }
   }, [user])
+
+  // Periodic and focus check: when the end date arrives, automatically complete due rentals
+  useEffect(() => {
+    if (!user || !rentals.length) return
+
+    const checkDue = () => {
+      const due = rentals.filter(isRentalDueComplete)
+      if (due.length > 0) {
+        setRentals((prev) =>
+          prev.map((r) =>
+            isRentalDueComplete(r) ? { ...r, status: 'completed', autoCompleted: true } : r
+          )
+        )
+        if (!isSyncingRef.current) {
+          isSyncingRef.current = true
+          autoCompleteDueRentals(rentals, vehicles).finally(() => {
+            isSyncingRef.current = false
+          })
+        }
+      }
+    }
+
+    checkDue()
+    const timer = setInterval(checkDue, 30000)
+    window.addEventListener('focus', checkDue)
+
+    return () => {
+      clearInterval(timer)
+      window.removeEventListener('focus', checkDue)
+    }
+  }, [user, rentals, vehicles])
 
   // Instant optimistic actions with cache persistence
   const removeVehicleOptimistic = useCallback((id) => {
@@ -215,17 +267,33 @@ export function DataProvider({ children }) {
     return removed
   }, [])
 
+  const reconciledVehicles = useMemo(() => {
+    const activeVehicleIds = new Set()
+    for (const r of rentals) {
+      if (r.status === 'active' && r.vehicleId) {
+        activeVehicleIds.add(r.vehicleId)
+      }
+    }
+    return vehicles.map((v) => {
+      if (v.status === 'maintenance') return v
+      if (v.status === 'rented' && !activeVehicleIds.has(v.id)) {
+        return { ...v, status: 'available' }
+      }
+      return v
+    })
+  }, [vehicles, rentals])
+
   const value = useMemo(() => {
     const statsByVehicle = buildVehicleStats(rentals)
     return {
-      vehicles,
+      vehicles: reconciledVehicles,
       rentals,
       loading,
       error,
       statsByVehicle,
-      totals: fleetTotals(vehicles, rentals),
-      notifications: buildNotifications(vehicles, rentals),
-      vehicleById: (id) => vehicles.find((v) => v.id === id),
+      totals: fleetTotals(reconciledVehicles, rentals),
+      notifications: buildNotifications(reconciledVehicles, rentals),
+      vehicleById: (id) => reconciledVehicles.find((v) => v.id === id),
       rentalsForVehicle: (id) => rentals.filter((r) => r.vehicleId === id),
       removeVehicleOptimistic,
       restoreVehicle,
@@ -236,7 +304,7 @@ export function DataProvider({ children }) {
       removeRentalOptimistic,
     }
   }, [
-    vehicles,
+    reconciledVehicles,
     rentals,
     loading,
     error,

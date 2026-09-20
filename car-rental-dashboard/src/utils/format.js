@@ -87,10 +87,45 @@ export const addDays = (startDate, numDays) => {
   return `${resY}-${resM}-${resD}`
 }
 
-export const daysUntil = (value) => {
+export const toLocalDateString = (value) => {
+  if (!value) return ''
+  if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return value
+  }
   const d = toDate(value)
-  if (!d) return null
-  return Math.round((new Date(d.toDateString()) - new Date(new Date().toDateString())) / 86400000)
+  if (!d) return ''
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+export const getTodayDateString = () => {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+/** Check if an active rental has reached or passed its end date */
+export const isRentalDueComplete = (rental) => {
+  if (!rental || rental.status !== 'active') return false
+  if (rental.manualStatus) return false
+  const endStr = toLocalDateString(rental.endDate)
+  const todayStr = getTodayDateString()
+  return Boolean(endStr && endStr <= todayStr)
+}
+
+export const daysUntil = (value) => {
+  const endStr = toLocalDateString(value)
+  const todayStr = getTodayDateString()
+  if (!endStr || !todayStr) return null
+  const [y1, m1, d1] = endStr.split('-').map(Number)
+  const [y2, m2, d2] = todayStr.split('-').map(Number)
+  const t1 = Date.UTC(y1, m1 - 1, d1)
+  const t2 = Date.UTC(y2, m2 - 1, d2)
+  return Math.round((t1 - t2) / 86400000)
 }
 
 export const monthKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
