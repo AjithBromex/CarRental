@@ -12,13 +12,13 @@ import { auth, toEmail, isConfigured } from '../firebase/firebaseConfig'
 const AuthContext = createContext(null)
 
 const MESSAGES = {
-  'auth/invalid-credential': 'That email/username and password don’t match. Please check your credentials in Firebase Console.',
+  'auth/invalid-credential': 'That email/username and password don’t match.',
   'auth/wrong-password': 'That username and password don’t match.',
   'auth/user-not-found': 'No account found with that email.',
   'auth/invalid-email': 'That username or email isn’t valid.',
   'auth/too-many-requests': 'Too many attempts. Wait a minute, then try again.',
   'auth/network-request-failed': 'No connection to Firebase. Check your network.',
-  'auth/user-disabled': 'This account has been disabled in Firebase Console.',
+  'auth/user-disabled': 'This account has been disabled.',
 }
 
 const STORAGE_KEY = 'fleetline_auth_user'
