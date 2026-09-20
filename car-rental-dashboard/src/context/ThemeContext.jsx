@@ -12,6 +12,7 @@ export function ThemeProvider({ children }) {
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme
+    document.documentElement.style.colorScheme = theme
     localStorage.setItem(KEY, theme)
     document
       .querySelector('meta[name="theme-color"]')

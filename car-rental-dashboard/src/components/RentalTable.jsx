@@ -100,7 +100,8 @@ export default function RentalTable({
                 <td>
                   {onStatusChange ? (
                     <select
-                      className="select"
+                      className={`select status-select status-${r.status}`}
+                      data-status={r.status}
                       style={{ height: 32, fontSize: '0.82rem', minWidth: 118 }}
                       value={r.status}
                       onChange={(e) => onStatusChange(r, e.target.value)}
