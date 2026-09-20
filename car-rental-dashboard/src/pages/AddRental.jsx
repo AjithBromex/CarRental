@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, Car, User, CalendarDays, IndianRupee, AlertCircle, Save, RotateCcw } from 'lucide-react'
+import { ArrowLeft, Car, User, CalendarDays, IndianRupee, AlertCircle, Save } from 'lucide-react'
 import { useData } from '../context/DataContext'
 import { useToast } from '../context/ToastContext'
 import { Spinner } from '../components/Loading'
 import Plate from '../components/Plate'
 import StatusBadge from '../components/StatusBadge'
 import { addRental, addRentalWithId, createRentalRef, updateRental } from '../services/rentalService'
-import { inr, inputDate, daysBetween, isValidPhone, phoneDigits } from '../utils/format'
+import { inr, inputDate, daysBetween, addDays, isValidPhone, phoneDigits } from '../utils/format'
 
 const today = () => inputDate(new Date())
 
@@ -59,7 +59,6 @@ export default function AddRental() {
   const [form, setForm] = useState({ ...BLANK, vehicleId: params.get('vehicle') || '' })
   const [errors, setErrors] = useState({})
   const [busy, setBusy] = useState(false)
-  const [manualDays, setManualDays] = useState(false)
   const original = isEdit ? rentals.find((r) => r.id === id) : null
   const hydrated = useRef(false)
 
@@ -87,15 +86,48 @@ export default function AddRental() {
       notes: original.notes || '',
       status: original.status || 'active',
     })
-    setManualDays(true)
   }, [isEdit, loading, original])
 
-  // Dates drive the day count unless the owner overrides it.
-  useEffect(() => {
-    if (manualDays || !form.startDate || !form.endDate) return
-    const d = daysBetween(form.startDate, form.endDate)
-    setForm((f) => (String(d) === f.days ? f : { ...f, days: String(d) }))
-  }, [form.startDate, form.endDate, manualDays])
+  const onStartDateChange = (e) => {
+    const value = e.target.value
+    setForm((f) => {
+      const next = { ...f, startDate: value }
+      const count = parseInt(f.days, 10)
+      if (value && count >= 1) {
+        next.endDate = addDays(value, count)
+      } else if (value && f.endDate && value > f.endDate) {
+        next.endDate = value
+      }
+      return next
+    })
+    setErrors((x) => ({ ...x, startDate: undefined, endDate: undefined }))
+  }
+
+  const onEndDateChange = (e) => {
+    const value = e.target.value
+    setForm((f) => {
+      const next = { ...f, endDate: value }
+      if (f.startDate && value) {
+        const d = daysBetween(f.startDate, value)
+        next.days = String(d)
+      }
+      return next
+    })
+    setErrors((x) => ({ ...x, endDate: undefined, days: undefined }))
+  }
+
+  const onDaysChange = (e) => {
+    const value = e.target.value
+    setForm((f) => {
+      const next = { ...f, days: value }
+      const count = parseInt(value, 10)
+      if (f.startDate && count >= 1) {
+        next.endDate = addDays(f.startDate, count)
+      }
+      return next
+    })
+    setErrors((x) => ({ ...x, days: undefined, endDate: undefined }))
+  }
 
   const vehicle = vehicles.find((v) => v.id === form.vehicleId)
   const total = Number(form.totalAmount) || 0
@@ -289,7 +321,7 @@ export default function AddRental() {
                 <label htmlFor="start">
                   Start date <span className="req">*</span>
                 </label>
-                <input id="start" className={`input ${errors.startDate ? 'invalid' : ''}`} type="date" value={form.startDate} onChange={set('startDate')} />
+                <input id="start" className={`input ${errors.startDate ? 'invalid' : ''}`} type="date" value={form.startDate} onChange={onStartDateChange} />
                 {errors.startDate && (
                   <span className="err-text">
                     <AlertCircle size={13} /> {errors.startDate}
@@ -301,7 +333,7 @@ export default function AddRental() {
                 <label htmlFor="end">
                   End date <span className="req">*</span>
                 </label>
-                <input id="end" className={`input ${errors.endDate ? 'invalid' : ''}`} type="date" min={form.startDate} value={form.endDate} onChange={set('endDate')} />
+                <input id="end" className={`input ${errors.endDate ? 'invalid' : ''}`} type="date" min={form.startDate} value={form.endDate} onChange={onEndDateChange} />
                 {errors.endDate && (
                   <span className="err-text">
                     <AlertCircle size={13} /> {errors.endDate}
@@ -311,39 +343,21 @@ export default function AddRental() {
 
               <div className="field">
                 <label htmlFor="days">Number of days</label>
-                <div className="row" style={{ gap: 6, flexWrap: 'nowrap' }}>
-                  <input
-                    id="days"
-                    className={`input ${errors.days ? 'invalid' : ''}`}
-                    type="number"
-                    min="1"
-                    inputMode="numeric"
-                    value={form.days}
-                    onChange={(e) => {
-                      setManualDays(true)
-                      set('days')(e)
-                    }}
-                  />
-                  {manualDays && (
-                    <button
-                      type="button"
-                      className="icon-btn"
-                      title="Recalculate from the dates"
-                      onClick={() => {
-                        setManualDays(false)
-                        setForm((f) => ({ ...f, days: String(daysBetween(f.startDate, f.endDate)) }))
-                      }}
-                    >
-                      <RotateCcw size={15} />
-                    </button>
-                  )}
-                </div>
+                <input
+                  id="days"
+                  className={`input ${errors.days ? 'invalid' : ''}`}
+                  type="number"
+                  min="1"
+                  inputMode="numeric"
+                  value={form.days}
+                  onChange={onDaysChange}
+                />
                 {errors.days ? (
                   <span className="err-text">
                     <AlertCircle size={13} /> {errors.days}
                   </span>
                 ) : (
-                  <span className="hint">{manualDays ? 'Set by hand' : 'Counted from the dates'}</span>
+                  <span className="hint">Adjusting days automatically updates the end date</span>
                 )}
               </div>
 

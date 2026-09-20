@@ -44,11 +44,47 @@ export const inputDate = (value) => {
 }
 
 export const daysBetween = (start, end) => {
+  if (
+    typeof start === 'string' &&
+    typeof end === 'string' &&
+    /^\d{4}-\d{2}-\d{2}$/.test(start) &&
+    /^\d{4}-\d{2}-\d{2}$/.test(end)
+  ) {
+    const [y1, m1, d1] = start.split('-').map(Number)
+    const [y2, m2, d2] = end.split('-').map(Number)
+    const t1 = Date.UTC(y1, m1 - 1, d1)
+    const t2 = Date.UTC(y2, m2 - 1, d2)
+    return Math.max(1, Math.round((t2 - t1) / 86400000) + 1)
+  }
   const a = toDate(start)
   const b = toDate(end)
   if (!a || !b) return 0
   const ms = new Date(b.toDateString()) - new Date(a.toDateString())
   return Math.max(1, Math.round(ms / 86400000) + 1)
+}
+
+/** Calculate end date (yyyy-mm-dd) given start date and duration in days (inclusive) */
+export const addDays = (startDate, numDays) => {
+  if (!startDate) return ''
+  const count = parseInt(numDays, 10)
+  if (isNaN(count) || count < 1) return ''
+
+  if (typeof startDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(startDate)) {
+    const [y, m, d] = startDate.split('-').map(Number)
+    const target = new Date(y, m - 1, d + (count - 1))
+    const resY = target.getFullYear()
+    const resM = String(target.getMonth() + 1).padStart(2, '0')
+    const resD = String(target.getDate()).padStart(2, '0')
+    return `${resY}-${resM}-${resD}`
+  }
+
+  const dt = toDate(startDate)
+  if (!dt) return ''
+  const target = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate() + (count - 1))
+  const resY = target.getFullYear()
+  const resM = String(target.getMonth() + 1).padStart(2, '0')
+  const resD = String(target.getDate()).padStart(2, '0')
+  return `${resY}-${resM}-${resD}`
 }
 
 export const daysUntil = (value) => {
