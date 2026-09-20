@@ -23,6 +23,16 @@ export default function Layout() {
 
   return (
     <div className="shell">
+      {/* Ambient glowing fluid mesh for glassmorphism refraction across entire dashboard */}
+      <div className="dashboard-ambient-mesh" aria-hidden="true">
+        <div className="dashboard-blob blob-1" />
+        <div className="dashboard-blob blob-2" />
+        <div className="dashboard-blob blob-3" />
+        <div className="dashboard-blob blob-4" />
+        <div className="dashboard-stripe stripe-1" />
+        <div className="dashboard-stripe stripe-2" />
+      </div>
+
       <Sidebar
         collapsed={collapsed}
         open={mobileOpen}
