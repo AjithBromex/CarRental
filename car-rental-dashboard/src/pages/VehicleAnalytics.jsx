@@ -11,6 +11,10 @@ import {
   Repeat,
   Timer,
   ClipboardList,
+  Wrench,
+  Coins,
+  Trash2,
+  TrendingUp,
 } from 'lucide-react'
 import {
   ResponsiveContainer,
@@ -36,23 +40,119 @@ import PaymentCard from '../components/PaymentCard'
 import RentalTable from '../components/RentalTable'
 import EmptyState from '../components/EmptyState'
 import ConfirmDialog from '../components/ConfirmDialog'
-import { PageLoader } from '../components/Loading'
+import { PageLoader, Spinner } from '../components/Loading'
 import { monthlySeries, statsFor } from '../utils/analytics'
-import { setVehicleStatus } from '../services/vehicleService'
+import {
+  setVehicleStatus,
+  addVehicleMaintenanceRecord,
+  deleteVehicleMaintenanceRecord,
+  setVehicleMaintenanceCost,
+} from '../services/vehicleService'
 import { setRentalStatus, deleteRental } from '../services/rentalService'
 import { inr, inrShort, num, fmtDate } from '../utils/format'
 
 export default function VehicleAnalytics() {
   const { id } = useParams()
-  const { vehicles, rentals, statsByVehicle, loading } = useData()
+  const { vehicles, rentals, statsByVehicle, loading, updateVehicleOptimistic } = useData()
   const { toast } = useToast()
   const navigate = useNavigate()
   const [toDeleteRental, setToDeleteRental] = useState(null)
 
+  // Maintenance state
+  const [showMaintForm, setShowMaintForm] = useState(false)
+  const [maintAmount, setMaintAmount] = useState('')
+  const [maintDate, setMaintDate] = useState(() => new Date().toISOString().slice(0, 10))
+  const [maintType, setMaintType] = useState('General Service')
+  const [maintNotes, setMaintNotes] = useState('')
+  const [maintBusy, setMaintBusy] = useState(false)
+  const [toDeleteMaint, setToDeleteMaint] = useState(null)
+  const [directCostEdit, setDirectCostEdit] = useState(false)
+  const [directCost, setDirectCost] = useState('')
+
   const vehicle = vehicles.find((v) => v.id === id)
   const mine = useMemo(() => rentals.filter((r) => r.vehicleId === id), [rentals, id])
-  const stats = statsFor(statsByVehicle, id)
+  const stats = statsFor(statsByVehicle, id, vehicle)
   const months = useMemo(() => monthlySeries(mine, 6), [mine])
+  const records = useMemo(
+    () => (Array.isArray(vehicle?.maintenanceRecords) ? vehicle.maintenanceRecords : []),
+    [vehicle?.maintenanceRecords]
+  )
+
+  const handleAddMaintenance = async (e) => {
+    e.preventDefault()
+    const amt = Number(maintAmount)
+    if (!amt || amt <= 0) {
+      toast('Please enter a valid maintenance amount', 'error')
+      return
+    }
+    setMaintBusy(true)
+    const newRecord = {
+      id: `maint_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      amount: amt,
+      date: maintDate || new Date().toISOString().slice(0, 10),
+      type: maintType,
+      description: maintNotes.trim(),
+      createdAt: new Date().toISOString(),
+    }
+    const nextRecords = [newRecord, ...records]
+    const nextTotal = nextRecords.reduce((sum, r) => sum + (Number(r.amount) || 0), 0)
+
+    // Optimistic UI update immediately
+    updateVehicleOptimistic(vehicle.id, {
+      maintenanceRecords: nextRecords,
+      maintenanceCost: nextTotal,
+    })
+    toast(`Recorded ₹${amt.toLocaleString('en-IN')} maintenance. Vehicle profit updated!`)
+    setMaintAmount('')
+    setMaintNotes('')
+    setShowMaintForm(false)
+
+    try {
+      await addVehicleMaintenanceRecord(vehicle.id, vehicle, newRecord)
+    } catch (err) {
+      toast(`Error saving to database: ${err.message}`, 'error')
+    } finally {
+      setMaintBusy(false)
+    }
+  }
+
+  const handleDeleteMaintenance = async () => {
+    if (!toDeleteMaint) return
+    const target = toDeleteMaint
+    setToDeleteMaint(null)
+
+    const nextRecords = records.filter((r) => r.id !== target.id)
+    const nextTotal = nextRecords.reduce((sum, r) => sum + (Number(r.amount) || 0), 0)
+
+    // Optimistic update
+    updateVehicleOptimistic(vehicle.id, {
+      maintenanceRecords: nextRecords,
+      maintenanceCost: nextTotal,
+    })
+    toast(`Maintenance entry removed. Profit updated.`)
+
+    try {
+      await deleteVehicleMaintenanceRecord(vehicle.id, vehicle, target.id)
+    } catch (err) {
+      toast(`Error syncing delete: ${err.message}`, 'error')
+    }
+  }
+
+  const handleSaveDirectCost = async (e) => {
+    e.preventDefault()
+    const val = Math.max(0, Number(directCost) || 0)
+    setMaintBusy(true)
+    updateVehicleOptimistic(vehicle.id, { maintenanceCost: val })
+    toast(`Maintenance cost set to ₹${val.toLocaleString('en-IN')}`)
+    setDirectCostEdit(false)
+    try {
+      await setVehicleMaintenanceCost(vehicle.id, val)
+    } catch (err) {
+      toast(`Failed to update: ${err.message}`, 'error')
+    } finally {
+      setMaintBusy(false)
+    }
+  }
 
   if (loading && !vehicle) return <PageLoader label="Loading vehicle" />
 
@@ -137,6 +237,22 @@ export default function VehicleAnalytics() {
       </section>
 
       <div className="stat-grid">
+        <StatCard
+          icon={Coins}
+          label="Net vehicle profit"
+          value={inr(stats.profit)}
+          foot={stats.maintenanceCost > 0 ? `Revenue ${inrShort(stats.revenue)} − Maint ${inrShort(stats.maintenanceCost)}` : 'Revenue − Maintenance'}
+          accent={stats.profit >= 0 ? 'var(--green)' : 'var(--red)'}
+          accentSoft={stats.profit >= 0 ? 'var(--green-soft)' : 'var(--red-soft)'}
+        />
+        <StatCard
+          icon={Wrench}
+          label="Maintenance cost"
+          value={inr(stats.maintenanceCost)}
+          foot={records.length ? `${records.length} service record${records.length === 1 ? '' : 's'}` : 'Deducted from profit'}
+          accent="var(--amber)"
+          accentSoft="var(--amber-soft)"
+        />
         <StatCard icon={Repeat} label="Times rented" value={num(stats.rentals)} foot={`${num(stats.activeRentals)} active now`} accent="var(--amber)" accentSoft="var(--amber-soft)" />
         <StatCard icon={CalendarDays} label="Days on rent" value={num(stats.days)} foot={`${avgDays.toFixed(1)} days per trip`} accent="var(--blue)" accentSoft="var(--blue-soft)" />
         <StatCard icon={IndianRupee} label="Revenue earned" value={inr(stats.revenue)} foot={`${inr(perDay)} per day on rent`} accent="var(--violet)" accentSoft="rgba(139,108,240,0.14)" />
@@ -146,6 +262,265 @@ export default function VehicleAnalytics() {
         <StatCard icon={Timer} label="Average duration" value={`${avgDays.toFixed(1)} days`} foot="Per booking" accent="var(--blue)" accentSoft="var(--blue-soft)" />
         <StatCard icon={ClipboardList} label="Share of fleet revenue" value={`${revenueShare(stats.revenue, vehicles, statsByVehicle)}%`} foot="Against every other vehicle" accent="var(--green)" accentSoft="var(--green-soft)" />
       </div>
+
+      <section className="panel" style={{ marginBottom: 16 }}>
+        <header className="panel-head">
+          <div className="row" style={{ gap: 8 }}>
+            <span className="stat-icon" style={{ '--accent-soft': 'var(--amber-soft)', '--accent': 'var(--amber)', width: 32, height: 32 }}>
+              <Wrench size={16} />
+            </span>
+            <div>
+              <h3>Vehicle Maintenance & Profit Calculation</h3>
+              <p className="sub">
+                Maintenance costs are automatically deducted from {vehicle.name}&apos;s total profit
+              </p>
+            </div>
+          </div>
+          <div className="row" style={{ gap: 8 }}>
+            <button
+              className="btn btn-sm"
+              onClick={() => {
+                setDirectCost(String(stats.maintenanceCost || ''))
+                setDirectCostEdit((s) => !s)
+                setShowMaintForm(false)
+              }}
+            >
+              <Pencil size={13} /> {directCostEdit ? 'Close' : 'Set lump-sum cost'}
+            </button>
+            <button
+              className="btn btn-sm btn-primary"
+              onClick={() => {
+                setShowMaintForm((s) => !s)
+                setDirectCostEdit(false)
+              }}
+            >
+              <Plus size={14} /> {showMaintForm ? 'Close form' : 'Record maintenance'}
+            </button>
+          </div>
+        </header>
+
+        <div className="panel-body">
+          {/* Profit Breakdown Bar */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+              gap: 12,
+              padding: '12px 16px',
+              borderRadius: 'var(--r-md)',
+              background: 'var(--card-bg, rgba(255,255,255,0.03))',
+              border: '1px solid var(--line)',
+              marginBottom: 16,
+            }}
+          >
+            <div>
+              <span className="cell-sub" style={{ fontSize: '0.78rem' }}>Vehicle Gross Revenue</span>
+              <div className="num" style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--fg)' }}>
+                {inr(stats.revenue)}
+              </div>
+            </div>
+            <div>
+              <span className="cell-sub" style={{ fontSize: '0.78rem' }}>Total Maintenance Cost</span>
+              <div className="num" style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--amber)' }}>
+                − {inr(stats.maintenanceCost)}
+              </div>
+            </div>
+            <div>
+              <span className="cell-sub" style={{ fontSize: '0.78rem' }}>Net Vehicle Profit</span>
+              <div
+                className="num"
+                style={{
+                  fontSize: '1.2rem',
+                  fontWeight: 700,
+                  color: stats.profit >= 0 ? 'var(--green)' : 'var(--red)',
+                }}
+              >
+                {inr(stats.profit)}
+              </div>
+            </div>
+            <div>
+              <span className="cell-sub" style={{ fontSize: '0.78rem' }}>Profit Status</span>
+              <div style={{ marginTop: 4 }}>
+                <span
+                  style={{
+                    display: 'inline-block',
+                    padding: '2px 8px',
+                    borderRadius: 6,
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    background: stats.profit >= 0 ? 'var(--green-soft)' : 'var(--red-soft)',
+                    color: stats.profit >= 0 ? 'var(--green)' : 'var(--red)',
+                  }}
+                >
+                  {stats.profit >= 0 ? 'Profitable' : 'Deficit / Investment'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Form to Add Maintenance */}
+          {showMaintForm && (
+            <form onSubmit={handleAddMaintenance} style={{ marginBottom: 20, padding: 16, borderRadius: 'var(--r-md)', background: 'var(--card-bg, rgba(255,255,255,0.02))', border: '1px solid var(--line)' }}>
+              <h4 style={{ margin: '0 0 12px', fontSize: '0.95rem' }}>Enter Maintenance Details</h4>
+              <div className="form-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
+                <div className="field">
+                  <label htmlFor="m_amount">Amount (₹) <span className="req">*</span></label>
+                  <input
+                    id="m_amount"
+                    className="input"
+                    type="number"
+                    min="1"
+                    required
+                    autoFocus
+                    value={maintAmount}
+                    onChange={(e) => setMaintAmount(e.target.value)}
+                    placeholder="e.g. 4500"
+                  />
+                  <span className="hint">This amount decreases vehicle profit</span>
+                </div>
+                <div className="field">
+                  <label htmlFor="m_date">Service Date</label>
+                  <input
+                    id="m_date"
+                    className="input"
+                    type="date"
+                    value={maintDate}
+                    onChange={(e) => setMaintDate(e.target.value)}
+                  />
+                </div>
+                <div className="field">
+                  <label htmlFor="m_type">Service Category</label>
+                  <select
+                    id="m_type"
+                    className="select"
+                    value={maintType}
+                    onChange={(e) => setMaintType(e.target.value)}
+                  >
+                    <option value="General Service">General Service</option>
+                    <option value="Oil & Fluids">Oil & Fluids</option>
+                    <option value="Tyres & Wheels">Tyres & Wheels</option>
+                    <option value="Brakes & Suspension">Brakes & Suspension</option>
+                    <option value="Engine & Transmission">Engine & Transmission</option>
+                    <option value="Battery & Electrical">Battery & Electrical</option>
+                    <option value="Bodywork & Painting">Bodywork & Painting</option>
+                    <option value="Inspection / PUC">Inspection / PUC</option>
+                    <option value="Other Repairs">Other Repairs</option>
+                  </select>
+                </div>
+                <div className="field span-2">
+                  <label htmlFor="m_notes">Description / Notes</label>
+                  <input
+                    id="m_notes"
+                    className="input"
+                    value={maintNotes}
+                    onChange={(e) => setMaintNotes(e.target.value)}
+                    placeholder="e.g. Oil filter change, brake pad replacement, invoice #1024"
+                  />
+                </div>
+              </div>
+              <div className="row" style={{ justifyContent: 'flex-end', gap: 8, marginTop: 14 }}>
+                <button type="button" className="btn btn-ghost btn-sm" onClick={() => setShowMaintForm(false)} disabled={maintBusy}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary btn-sm" disabled={maintBusy}>
+                  {maintBusy ? <Spinner /> : <Plus size={14} />} Save & Deduct From Profit
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* Quick Direct Cost Setting Form */}
+          {directCostEdit && (
+            <form onSubmit={handleSaveDirectCost} style={{ marginBottom: 20, padding: 16, borderRadius: 'var(--r-md)', background: 'var(--card-bg, rgba(255,255,255,0.02))', border: '1px solid var(--line)' }}>
+              <h4 style={{ margin: '0 0 8px', fontSize: '0.95rem' }}>Direct Lump-Sum Maintenance Cost</h4>
+              <p className="hint" style={{ marginBottom: 12 }}>
+                Enter total maintenance spent on this vehicle directly. This will be deducted from profit.
+              </p>
+              <div className="row" style={{ gap: 10, alignItems: 'center' }}>
+                <input
+                  type="number"
+                  min="0"
+                  className="input"
+                  style={{ maxWidth: 220 }}
+                  value={directCost}
+                  onChange={(e) => setDirectCost(e.target.value)}
+                  placeholder="Total maintenance ₹"
+                />
+                <button type="submit" className="btn btn-primary btn-sm" disabled={maintBusy}>
+                  {maintBusy ? <Spinner /> : 'Save Total Cost'}
+                </button>
+                <button type="button" className="btn btn-ghost btn-sm" onClick={() => setDirectCostEdit(false)}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* Records Table */}
+          {records.length > 0 ? (
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Category</th>
+                    <th>Notes</th>
+                    <th className="right">Cost / Amount</th>
+                    <th className="right">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {records.map((r) => (
+                    <tr key={r.id}>
+                      <td style={{ whiteSpace: 'nowrap' }}>{fmtDate(r.date)}</td>
+                      <td>
+                        <span
+                          style={{
+                            display: 'inline-block',
+                            padding: '2px 8px',
+                            borderRadius: 4,
+                            fontSize: '0.78rem',
+                            fontWeight: 600,
+                            background: 'var(--amber-soft)',
+                            color: 'var(--amber)',
+                          }}
+                        >
+                          {r.type || 'Service'}
+                        </span>
+                      </td>
+                      <td style={{ color: 'var(--muted)', fontSize: '0.88rem' }}>
+                        {r.description || '—'}
+                      </td>
+                      <td className="right num" style={{ fontWeight: 600, color: 'var(--amber)' }}>
+                        {inr(r.amount)}
+                      </td>
+                      <td className="right">
+                        <button
+                          className="icon-btn ghost"
+                          style={{ width: 28, height: 28 }}
+                          onClick={() => setToDeleteMaint(r)}
+                          title="Delete record"
+                          aria-label="Delete maintenance record"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', padding: '24px 16px', color: 'var(--muted)' }}>
+              <p style={{ margin: 0, fontSize: '0.9rem' }}>
+                {stats.maintenanceCost > 0
+                  ? `Direct maintenance cost set to ${inr(stats.maintenanceCost)}. Use "Record maintenance" to log itemized service history.`
+                  : 'No maintenance recorded for this vehicle. Click "+ Record maintenance" to add service expenses.'}
+              </p>
+            </div>
+          )}
+        </div>
+      </section>
 
       {stats.rentals === 0 ? (
         <section className="panel">
@@ -243,6 +618,16 @@ export default function VehicleAnalytics() {
             setToDeleteRental(null)
           }
         }}
+      />
+
+      <ConfirmDialog
+        open={Boolean(toDeleteMaint)}
+        danger
+        title="Delete maintenance record?"
+        body={`Removing the ₹${Number(toDeleteMaint?.amount || 0).toLocaleString('en-IN')} expense will increase ${vehicle.name}'s net profit.`}
+        confirmLabel="Delete record"
+        onCancel={() => setToDeleteMaint(null)}
+        onConfirm={handleDeleteMaintenance}
       />
     </>
   )

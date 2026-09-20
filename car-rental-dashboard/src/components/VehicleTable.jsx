@@ -18,6 +18,8 @@ export default function VehicleTable({ vehicles, onEdit, onDelete }) {
             <th className="right">Rentals</th>
             <th className="right">Days</th>
             <th className="right">Revenue</th>
+            <th className="right">Maintenance</th>
+            <th className="right">Profit</th>
             <th className="right">Pending</th>
             <th className="right">Actions</th>
           </tr>
@@ -38,6 +40,18 @@ export default function VehicleTable({ vehicles, onEdit, onDelete }) {
               <td className="right num">{num(v.stats.rentals)}</td>
               <td className="right num">{num(v.stats.days)}</td>
               <td className="right num">{inr(v.stats.revenue)}</td>
+              <td className="right num" style={{ color: v.stats.maintenanceCost > 0 ? 'var(--amber)' : 'var(--muted)' }}>
+                {v.stats.maintenanceCost > 0 ? `−${inr(v.stats.maintenanceCost)}` : '₹0'}
+              </td>
+              <td
+                className="right num"
+                style={{
+                  fontWeight: 600,
+                  color: (v.stats.profit ?? 0) >= 0 ? 'var(--green)' : 'var(--red)',
+                }}
+              >
+                {inr(v.stats.profit ?? 0)}
+              </td>
               <td className="right num" style={{ color: v.stats.balance > 0 ? 'var(--red)' : 'var(--muted)' }}>
                 {inr(v.stats.balance)}
               </td>

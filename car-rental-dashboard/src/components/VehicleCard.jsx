@@ -34,18 +34,26 @@ export default function VehicleCard({ vehicle, onEdit, onDelete }) {
           <Plate number={vehicle.registrationNumber} />
         </div>
 
-        <div className="metrics">
+        <div className="metrics" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
           <div className="metric">
             <small>Rentals</small>
             <strong>{num(s.rentals)}</strong>
           </div>
           <div className="metric">
-            <small>Days out</small>
-            <strong>{num(s.days)}</strong>
-          </div>
-          <div className="metric">
             <small>Earned</small>
             <strong>{inrShort(s.revenue)}</strong>
+          </div>
+          <div className="metric">
+            <small>Maint.</small>
+            <strong style={{ color: s.maintenanceCost > 0 ? 'var(--amber)' : 'inherit' }}>
+              {s.maintenanceCost > 0 ? `−${inrShort(s.maintenanceCost)}` : '₹0'}
+            </strong>
+          </div>
+          <div className="metric">
+            <small>Profit</small>
+            <strong style={{ color: (s.profit ?? 0) >= 0 ? 'var(--green)' : 'var(--red)' }}>
+              {inrShort(s.profit ?? 0)}
+            </strong>
           </div>
         </div>
 

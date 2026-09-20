@@ -14,6 +14,7 @@ const BLANK = {
   year: String(new Date().getFullYear()),
   notes: '',
   status: 'available',
+  maintenanceCost: '',
 }
 
 const processJpgFile = (file) =>
@@ -108,6 +109,7 @@ export default function AddVehicle() {
       year: String(v.year || ''),
       notes: v.notes || '',
       status: v.status || 'available',
+      maintenanceCost: v.maintenanceCost ? String(v.maintenanceCost) : '',
     })
   }, [id, isEdit, vehicles, loading])
 
@@ -167,14 +169,19 @@ export default function AddVehicle() {
     if (Object.keys(found).length) return
 
     setBusy(true)
+    const payload = {
+      ...form,
+      year: Number(form.year),
+      maintenanceCost: Math.max(0, Number(form.maintenanceCost) || 0),
+    }
     try {
       if (isEdit) {
         // Immediate 0ms optimistic UI update and instant navigation
-        updateVehicleOptimistic(id, form)
+        updateVehicleOptimistic(id, payload)
         toast(`${form.name} updated`)
         navigate(`/vehicles/${id}`)
         // Sync to Firestore in background
-        await updateVehicle(id, form)
+        await updateVehicle(id, payload)
       } else {
         // Generate document ID instantly
         const newRef = createVehicleRef()
@@ -182,14 +189,13 @@ export default function AddVehicle() {
         // Add to React state immediately (0ms delay)
         addVehicleOptimistic({
           id: newId,
-          ...form,
-          year: Number(form.year),
+          ...payload,
           createdAt: new Date(),
         })
         toast(`${form.name} added to the fleet`)
         navigate('/vehicles')
         // Sync to Firestore in background
-        await addVehicleWithId(newId, form)
+        await addVehicleWithId(newId, payload)
       }
     } catch (err) {
       toast(`Couldn't save: ${err.message}`, 'error')
@@ -282,6 +288,20 @@ export default function AddVehicle() {
                   <option value="maintenance">Maintenance</option>
                 </select>
                 <span className="hint">Recording a rental switches this automatically.</span>
+              </div>
+
+              <div className="field span-2">
+                <label htmlFor="maintCost">Maintenance cost (₹)</label>
+                <input
+                  id="maintCost"
+                  className="input"
+                  type="number"
+                  min="0"
+                  value={form.maintenanceCost}
+                  onChange={set('maintenanceCost')}
+                  placeholder="0"
+                />
+                <span className="hint">This cost is deducted directly from the vehicle's profit.</span>
               </div>
 
               <div className="field span-2">
@@ -408,6 +428,11 @@ export default function AddVehicle() {
               {form.year || '—'}
             </p>
             <Plate number={form.registrationNumber || 'KL 00 AA 0000'} size="lg" />
+            {Number(form.maintenanceCost) > 0 && (
+              <p className="hint" style={{ marginTop: 12, color: 'var(--amber)' }}>
+                Maintenance cost: ₹{Number(form.maintenanceCost).toLocaleString('en-IN')}
+              </p>
+            )}
             {form.notes && (
               <p style={{ marginTop: 16, fontSize: '0.86rem', color: 'var(--muted)' }}>{form.notes}</p>
             )}

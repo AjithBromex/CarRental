@@ -23,6 +23,8 @@ const clean = (v) => {
     year: Number(v.year) || new Date().getFullYear(),
     notes: (v.notes || '').trim(),
     status: v.status || 'available',
+    maintenanceCost: Math.max(0, Number(v.maintenanceCost) || 0),
+    maintenanceRecords: Array.isArray(v.maintenanceRecords) ? v.maintenanceRecords : [],
   }
   if (v.model) data.model = v.model.trim()
   if (v.type) data.type = v.type.trim()
@@ -45,6 +47,49 @@ export const updateVehicle = (id, data) =>
 
 export const setVehicleStatus = (id, status) =>
   updateDoc(doc(db, 'vehicles', id), { status, updatedAt: serverTimestamp() })
+
+export const addVehicleMaintenanceRecord = async (id, currentVehicle, record) => {
+  const existingRecords = Array.isArray(currentVehicle?.maintenanceRecords) ? currentVehicle.maintenanceRecords : []
+  const newRecord = {
+    id: record.id || `maint_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    amount: Math.max(0, Number(record.amount) || 0),
+    date: record.date || new Date().toISOString().slice(0, 10),
+    type: record.type || 'General Service',
+    description: (record.description || '').trim(),
+    createdAt: new Date().toISOString(),
+  }
+  const nextRecords = [newRecord, ...existingRecords]
+  const totalCost = nextRecords.reduce((sum, r) => sum + (Number(r.amount) || 0), 0)
+
+  await updateDoc(doc(db, 'vehicles', id), {
+    maintenanceRecords: nextRecords,
+    maintenanceCost: totalCost,
+    updatedAt: serverTimestamp(),
+  })
+  return { nextRecords, totalCost }
+}
+
+export const deleteVehicleMaintenanceRecord = async (id, currentVehicle, recordId) => {
+  const existingRecords = Array.isArray(currentVehicle?.maintenanceRecords) ? currentVehicle.maintenanceRecords : []
+  const nextRecords = existingRecords.filter((r) => r.id !== recordId)
+  const totalCost = nextRecords.reduce((sum, r) => sum + (Number(r.amount) || 0), 0)
+
+  await updateDoc(doc(db, 'vehicles', id), {
+    maintenanceRecords: nextRecords,
+    maintenanceCost: totalCost,
+    updatedAt: serverTimestamp(),
+  })
+  return { nextRecords, totalCost }
+}
+
+export const setVehicleMaintenanceCost = async (id, cost) => {
+  const numCost = Math.max(0, Number(cost) || 0)
+  await updateDoc(doc(db, 'vehicles', id), {
+    maintenanceCost: numCost,
+    updatedAt: serverTimestamp(),
+  })
+  return numCost
+}
 
 /** Removes the vehicle instantly and cleans up any attached rentals */
 export const deleteVehicle = async (id) => {

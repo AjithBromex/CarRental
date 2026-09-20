@@ -13,7 +13,9 @@ import { withStats } from '../utils/analytics'
 import { deleteVehicle } from '../services/vehicleService'
 
 const SORTS = {
+  profit: (a, b) => (b.stats.profit ?? 0) - (a.stats.profit ?? 0),
   revenue: (a, b) => b.stats.revenue - a.stats.revenue,
+  maintenance: (a, b) => (b.stats.maintenanceCost ?? 0) - (a.stats.maintenanceCost ?? 0),
   rentals: (a, b) => b.stats.rentals - a.stats.rentals,
   days: (a, b) => b.stats.days - a.stats.days,
   pending: (a, b) => b.stats.balance - a.stats.balance,
@@ -104,7 +106,9 @@ export default function Vehicles() {
           <option value="maintenance">Maintenance</option>
         </select>
         <select className="select" value={sort} onChange={(e) => setSort(e.target.value)} aria-label="Sort vehicles">
+          <option value="profit">Highest net profit</option>
           <option value="revenue">Highest revenue</option>
+          <option value="maintenance">Highest maintenance</option>
           <option value="rentals">Most rentals</option>
           <option value="days">Most days out</option>
           <option value="pending">Largest balance</option>

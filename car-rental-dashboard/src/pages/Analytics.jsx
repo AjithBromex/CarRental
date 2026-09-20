@@ -33,7 +33,9 @@ const TREND = {
 }
 
 const METRICS = {
+  profit: { label: 'Net Profit', get: (v) => v.stats.profit ?? 0, fmt: inr, color: chartColors.green },
   revenue: { label: 'Revenue', get: (v) => v.stats.revenue, fmt: inr, color: chartColors.amber },
+  maintenance: { label: 'Maintenance Cost', get: (v) => v.stats.maintenanceCost ?? 0, fmt: inr, color: chartColors.red },
   rentals: { label: 'Rentals', get: (v) => v.stats.rentals, fmt: num, color: chartColors.blue },
   days: { label: 'Days on rent', get: (v) => v.stats.days, fmt: num, color: chartColors.violet },
   avg: {
@@ -268,6 +270,7 @@ export default function Analytics() {
                   <th className="right">Rentals</th>
                   <th className="right">Days</th>
                   <th className="right">Revenue</th>
+                  <th className="right">Profit</th>
                   <th className="right">Avg value</th>
                   <th className="right">Owed</th>
                 </tr>
@@ -284,6 +287,15 @@ export default function Analytics() {
                     <td className="right num">{num(v.stats.rentals)}</td>
                     <td className="right num">{num(v.stats.days)}</td>
                     <td className="right num">{inr(v.stats.revenue)}</td>
+                    <td
+                      className="right num"
+                      style={{
+                        fontWeight: 600,
+                        color: (v.stats.profit ?? 0) >= 0 ? 'var(--green)' : 'var(--red)',
+                      }}
+                    >
+                      {inr(v.stats.profit ?? 0)}
+                    </td>
                     <td className="right num">{inr(v.stats.rentals ? v.stats.revenue / v.stats.rentals : 0)}</td>
                     <td className="right num" style={{ color: v.stats.balance > 0 ? 'var(--red)' : 'var(--muted)' }}>
                       {inr(v.stats.balance)}

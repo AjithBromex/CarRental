@@ -115,7 +115,14 @@ export default function Dashboard() {
               <StatCard icon={Activity} label="Active rentals" value={num(totals.activeRentals)} foot={`${num(totals.completedRentals)} completed`} accent="var(--violet)" accentSoft="rgba(139,108,240,0.14)" />
             </Link>
             <Link to="/analytics" style={{ textDecoration: 'none', color: 'inherit', display: 'contents' }}>
-              <StatCard icon={IndianRupee} label="Rental revenue" value={inr(totals.revenue)} foot={`Across ${num(totals.totalRentals)} rentals`} accent="var(--amber)" accentSoft="var(--amber-soft)" />
+              <StatCard
+                icon={IndianRupee}
+                label="Rental revenue"
+                value={inr(totals.revenue)}
+                foot={totals.totalMaintenance > 0 ? `Net profit: ${inr(totals.totalProfit)} (−${inr(totals.totalMaintenance)} maint)` : `Across ${num(totals.totalRentals)} rentals`}
+                accent="var(--amber)"
+                accentSoft="var(--amber-soft)"
+              />
             </Link>
             <Link to="/payments" style={{ textDecoration: 'none', color: 'inherit', display: 'contents' }}>
               <StatCard icon={Wallet} label="Collected" value={inr(totals.paid)} foot={`${totals.collectionRate.toFixed(0)}% of what you billed`} accent="var(--green)" accentSoft="var(--green-soft)" />

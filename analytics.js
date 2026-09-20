@@ -11,7 +11,18 @@ const blank = () => ({
   balance: 0,
   activeRentals: 0,
   lastRentalAt: null,
+  maintenanceCost: 0,
+  profit: 0,
+  profitMargin: 0,
 })
+
+export function getVehicleMaintenanceCost(vehicle) {
+  if (!vehicle) return 0
+  if (Array.isArray(vehicle.maintenanceRecords) && vehicle.maintenanceRecords.length > 0) {
+    return vehicle.maintenanceRecords.reduce((sum, r) => sum + (Number(r.amount) || 0), 0)
+  }
+  return Number(vehicle.maintenanceCost) || 0
+}
 
 /**
  * One pass over rentals -> per-vehicle totals.
@@ -35,19 +46,32 @@ export function buildVehicleStats(rentals = []) {
   return map
 }
 
-export const statsFor = (map, vehicleId) =>
-  (map && typeof map.get === 'function' ? map.get(vehicleId) : null) || blank()
+export const statsFor = (map, vehicleId, vehicle = null) => {
+  const base = (map && typeof map.get === 'function' ? map.get(vehicleId) : null) || blank()
+  const maintenanceCost = getVehicleMaintenanceCost(vehicle)
+  const revenue = base.revenue || 0
+  const profit = revenue - maintenanceCost
+  const profitMargin = revenue > 0 ? (profit / revenue) * 100 : 0
+  return {
+    ...base,
+    maintenanceCost,
+    profit,
+    profitMargin,
+  }
+}
 
 /** Vehicles decorated with their stats, ready for tables and cards. */
 export function withStats(vehicles = [], rentals = []) {
   const map = buildVehicleStats(rentals)
-  return vehicles.map((v) => ({ ...v, stats: statsFor(map, v.id) }))
+  return vehicles.map((v) => ({ ...v, stats: statsFor(map, v.id, v) }))
 }
 
 export function fleetTotals(vehicles = [], rentals = []) {
   const live = rentals.filter(countsAsBusiness)
   const revenue = live.reduce((t, r) => t + (Number(r.totalAmount) || 0), 0)
   const paid = live.reduce((t, r) => t + (Number(r.amountPaid) || 0), 0)
+  const totalMaintenance = vehicles.reduce((sum, v) => sum + getVehicleMaintenanceCost(v), 0)
+  const totalProfit = revenue - totalMaintenance
   return {
     totalVehicles: vehicles.length,
     rented: vehicles.filter((v) => v.status === 'rented').length,
@@ -56,6 +80,8 @@ export function fleetTotals(vehicles = [], rentals = []) {
     revenue,
     paid,
     pending: Math.max(0, revenue - paid),
+    totalMaintenance,
+    totalProfit,
     totalDays: live.reduce((t, r) => t + (Number(r.days) || 0), 0),
     totalRentals: live.length,
     activeRentals: rentals.filter((r) => r.status === 'active').length,
