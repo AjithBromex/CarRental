@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
-import { Eye, EyeOff, AlertCircle, Sun, Moon, Check, HelpCircle, X } from 'lucide-react'
+import { Eye, EyeOff, AlertCircle, Sun, Moon, Check } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { Spinner } from '../components/Loading'
@@ -14,7 +14,6 @@ export default function Login() {
   const [show, setShow] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const [modalInfo, setModalInfo] = useState(null)
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -63,7 +62,7 @@ export default function Login() {
         <div className="glass-blob glass-blob-4" />
       </div>
 
-      {/* Circular striped precision watermark badges (as in the reference image) */}
+      {/* Circular striped precision watermark badges */}
       <div className="glass-striped-circle glass-stripe-1" />
       <div className="glass-striped-circle glass-stripe-2" />
       <div className="glass-striped-circle glass-stripe-3" />
@@ -86,7 +85,6 @@ export default function Login() {
               <Brand size="md" />
             </div>
             <h1 className="glass-title">Login</h1>
-            <div className="glass-subtitle">Owner access &bull; Sign in with your Firebase admin account</div>
           </div>
 
           <form onSubmit={submit} noValidate>
@@ -116,19 +114,6 @@ export default function Login() {
                 <label className="glass-label" htmlFor="password">
                   Password
                 </label>
-                <button
-                  type="button"
-                  className="glass-forgot-link"
-                  onClick={() =>
-                    setModalInfo({
-                      title: 'Reset Password',
-                      message:
-                        'To reset your admin password, please access the Firebase Console Authentication tab or contact your system administrator.',
-                    })
-                  }
-                >
-                  Forgot password ?
-                </button>
               </div>
               <div className="glass-input-wrapper">
                 <input
@@ -184,64 +169,9 @@ export default function Login() {
                 'Login'
               )}
             </button>
-
-            {/* Footer sign up prompt */}
-            <div className="glass-footer-link">
-              Don't have an account ?{' '}
-              <button
-                type="button"
-                className="glass-signup-link"
-                onClick={() =>
-                  setModalInfo({
-                    title: 'New Account Request',
-                    message:
-                      'Drift.co Rental Dashboard is an owner-administered system. To add a new manager or admin account, please request access from the principal owner or create the user in your Firebase project.',
-                  })
-                }
-              >
-                Sign up
-              </button>
-            </div>
           </form>
         </div>
       </div>
-
-      {/* Informational Dialog for Forgot Password / Sign up */}
-      {modalInfo && (
-        <div className="backdrop" style={{ zIndex: 100 }} onClick={() => setModalInfo(null)}>
-          <div
-            className="modal"
-            style={{
-              background: 'rgba(18, 20, 28, 0.92)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              color: '#ffffff',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div
-              className="modal-head"
-              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-            >
-              <div className="row" style={{ gap: 10, alignItems: 'center' }}>
-                <HelpCircle size={20} color="#e51b24" />
-                <h3 style={{ color: '#ffffff', margin: 0 }}>{modalInfo.title}</h3>
-              </div>
-              <button className="icon-btn" onClick={() => setModalInfo(null)}>
-                <X size={16} />
-              </button>
-            </div>
-            <div className="modal-body" style={{ padding: '20px 24px', color: 'rgba(255, 255, 255, 0.85)' }}>
-              <p style={{ margin: 0, lineHeight: 1.6 }}>{modalInfo.message}</p>
-            </div>
-            <div className="modal-foot" style={{ justifyContent: 'flex-end', padding: '14px 24px' }}>
-              <button className="btn btn-primary" onClick={() => setModalInfo(null)}>
-                Got it
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
