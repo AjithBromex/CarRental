@@ -169,10 +169,12 @@ export default function AddVehicle() {
     if (Object.keys(found).length) return
 
     setBusy(true)
+    const existing = isEdit ? vehicles.find((x) => x.id === id) : null
     const payload = {
       ...form,
       year: Number(form.year),
-      maintenanceCost: Math.max(0, Number(form.maintenanceCost) || 0),
+      maintenanceCost: existing?.maintenanceCost || 0,
+      maintenanceRecords: existing?.maintenanceRecords || [],
     }
     try {
       if (isEdit) {
@@ -288,20 +290,6 @@ export default function AddVehicle() {
                   <option value="maintenance">Maintenance</option>
                 </select>
                 <span className="hint">Recording a rental switches this automatically.</span>
-              </div>
-
-              <div className="field span-2">
-                <label htmlFor="maintCost">Maintenance cost (₹)</label>
-                <input
-                  id="maintCost"
-                  className="input"
-                  type="number"
-                  min="0"
-                  value={form.maintenanceCost}
-                  onChange={set('maintenanceCost')}
-                  placeholder="0"
-                />
-                <span className="hint">This cost is deducted directly from the vehicle's profit.</span>
               </div>
 
               <div className="field span-2">
@@ -428,11 +416,6 @@ export default function AddVehicle() {
               {form.year || '—'}
             </p>
             <Plate number={form.registrationNumber || 'KL 00 AA 0000'} size="lg" />
-            {Number(form.maintenanceCost) > 0 && (
-              <p className="hint" style={{ marginTop: 12, color: 'var(--amber)' }}>
-                Maintenance cost: ₹{Number(form.maintenanceCost).toLocaleString('en-IN')}
-              </p>
-            )}
             {form.notes && (
               <p style={{ marginTop: 16, fontSize: '0.86rem', color: 'var(--muted)' }}>{form.notes}</p>
             )}

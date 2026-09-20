@@ -15,6 +15,7 @@ import AddRental from './pages/AddRental'
 import Payments from './pages/Payments'
 import Drivers from './pages/Drivers'
 import Analytics from './pages/Analytics'
+import Maintenance from './pages/Maintenance'
 import Settings from './pages/Settings'
 import NotFound from './pages/NotFound'
 
@@ -39,6 +40,7 @@ export default function App() {
                     <Route path="rentals/new" element={<AddRental />} />
                     <Route path="rentals/edit/:id" element={<AddRental />} />
                     <Route path="payments" element={<Payments />} />
+                    <Route path="maintenance" element={<Maintenance />} />
                     <Route path="drivers" element={<Drivers />} />
                     <Route path="analytics" element={<Analytics />} />
                     <Route path="settings" element={<Settings />} />
