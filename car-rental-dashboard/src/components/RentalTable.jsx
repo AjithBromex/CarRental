@@ -27,6 +27,7 @@ export default function RentalTable({
             <th className="right">Total</th>
             <th className="right">Paid</th>
             <th className="right">Balance</th>
+            <th>Damage (Description)</th>
             <th>Payment</th>
             <th>Rental</th>
             <th className="right">Actions</th>
@@ -66,6 +67,32 @@ export default function RentalTable({
                 </td>
                 <td className="right num" style={{ color: balance > 0 ? 'var(--red)' : 'var(--muted)' }}>
                   {inr(balance)}
+                </td>
+                <td>
+                  {r.damageCost > 0 || r.damageDescription ? (
+                    <div style={{ maxWidth: 190 }}>
+                      {r.damageCost > 0 && (
+                        <div style={{ fontWeight: 600, color: 'var(--amber)', fontSize: '0.84rem' }}>
+                          ₹{Number(r.damageCost).toLocaleString('en-IN')}
+                        </div>
+                      )}
+                      <div
+                        className="cell-sub"
+                        style={{
+                          fontSize: '0.78rem',
+                          color: 'var(--muted)',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                        title={r.damageDescription || 'Incident reported'}
+                      >
+                        {r.damageDescription || 'Incident reported'}
+                      </div>
+                    </div>
+                  ) : (
+                    <span style={{ color: 'var(--faint)', fontSize: '0.85rem' }}>—</span>
+                  )}
                 </td>
                 <td>
                   <StatusBadge kind="payment" status={paymentStatus(r)} />

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, Car, User, CalendarDays, IndianRupee, AlertCircle, Save } from 'lucide-react'
+import { ArrowLeft, Car, User, CalendarDays, IndianRupee, AlertCircle, Save, AlertTriangle } from 'lucide-react'
 import { useData } from '../context/DataContext'
 import { useToast } from '../context/ToastContext'
 import { Spinner } from '../components/Loading'
@@ -23,6 +23,8 @@ const BLANK = {
   amountPaid: '',
   notes: '',
   status: 'active',
+  damageCost: '',
+  damageDescription: '',
 }
 
 function validate(form) {
@@ -85,6 +87,8 @@ export default function AddRental() {
       amountPaid: String(original.amountPaid ?? ''),
       notes: original.notes || '',
       status: original.status || 'active',
+      damageCost: original.damageCost ? String(original.damageCost) : '',
+      damageDescription: original.damageDescription || '',
     })
   }, [isEdit, loading, original])
 
@@ -175,6 +179,8 @@ export default function AddRental() {
     try {
       const payload = {
         ...form,
+        damageCost: Math.max(0, Number(form.damageCost) || 0),
+        damageDescription: form.damageDescription.trim(),
         vehicleName: vehicle?.name || '',
         registrationNumber: vehicle?.registrationNumber || '',
       }
@@ -409,6 +415,37 @@ export default function AddRental() {
                 <label htmlFor="rnotes">Notes</label>
                 <textarea id="rnotes" className="textarea" style={{ minHeight: 70 }} value={form.notes} onChange={set('notes')} placeholder="Advance paid by UPI, balance on return" />
               </div>
+
+              <div className="fieldset-title">
+                <AlertTriangle size={16} /> Incident & Damage Record (Optional)
+              </div>
+
+              <div className="field">
+                <label htmlFor="dmgCost">Damage cost (₹)</label>
+                <input
+                  id="dmgCost"
+                  className="input"
+                  type="number"
+                  min="0"
+                  inputMode="numeric"
+                  value={form.damageCost}
+                  onChange={set('damageCost')}
+                  placeholder="0"
+                />
+                <span className="hint">Recorded as a description only — not calculated into profit or loss.</span>
+              </div>
+
+              <div className="field">
+                <label htmlFor="dmgDesc">Damage description / details</label>
+                <input
+                  id="dmgDesc"
+                  className="input"
+                  value={form.damageDescription}
+                  onChange={set('damageDescription')}
+                  placeholder="e.g. Dent on front bumper, left mirror cracked"
+                />
+                <span className="hint">Describe any damage that occurred while vehicle was in rental.</span>
+              </div>
             </div>
 
             <div className="row" style={{ marginTop: 22, justifyContent: 'flex-end' }}>
@@ -459,7 +496,22 @@ export default function AddRental() {
               </div>
             </div>
 
-            <p className="hint">Balance is always total minus paid — you never type it in.</p>
+            {(Number(form.damageCost) > 0 || form.damageDescription) && (
+              <div style={{ borderTop: '1px solid var(--line)', margin: '14px 0 0', paddingTop: 14 }}>
+                <span style={{ fontSize: '0.78rem', color: 'var(--amber)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <AlertTriangle size={13} /> Damage Record (Informational only)
+                </span>
+                <p style={{ margin: '4px 0 2px', fontSize: '0.86rem', color: 'var(--fg)' }}>
+                  {form.damageDescription || 'Incident reported'}
+                  {Number(form.damageCost) > 0 && ` — ₹${Number(form.damageCost).toLocaleString('en-IN')}`}
+                </p>
+                <span className="hint" style={{ fontSize: '0.75rem' }}>
+                  * Not calculated into profit, loss or rental total.
+                </span>
+              </div>
+            )}
+
+            <p className="hint" style={{ marginTop: 12 }}>Balance is always total minus paid — you never type it in.</p>
           </div>
         </section>
       </div>

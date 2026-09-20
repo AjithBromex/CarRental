@@ -84,7 +84,7 @@ export default function Rentals() {
   }
 
   const exportCsv = () => {
-    const head = ['Vehicle', 'Plate', 'Driver', 'Phone', 'Location', 'Start', 'End', 'Days', 'Total', 'Paid', 'Balance', 'Status']
+    const head = ['Vehicle', 'Plate', 'Driver', 'Phone', 'Location', 'Start', 'End', 'Days', 'Total', 'Paid', 'Balance', 'Damage Cost', 'Damage Description', 'Status']
     const rows = list.map((r) => [
       r.vehicleName,
       r.registrationNumber,
@@ -97,6 +97,8 @@ export default function Rentals() {
       r.totalAmount,
       r.amountPaid,
       Math.max(0, (r.totalAmount || 0) - (r.amountPaid || 0)),
+      r.damageCost ? `₹${r.damageCost}` : '₹0',
+      r.damageDescription || '',
       r.status,
     ])
     const csv = [head, ...rows].map((line) => line.map((c) => `"${String(c ?? '').replace(/"/g, '""')}"`).join(',')).join('\n')

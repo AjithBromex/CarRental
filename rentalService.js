@@ -27,6 +27,8 @@ const clean = (r) => {
     totalAmount: total,
     amountPaid: paid,
     balance: Math.max(0, total - paid),
+    damageCost: Math.max(0, Number(r.damageCost) || 0),
+    damageDescription: (r.damageDescription || r.damageNotes || '').trim(),
     notes: (r.notes || '').trim(),
     status: r.status || 'active',
   }
