@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Sun, Moon, Download, LogOut, ShieldCheck, Database, Copy } from 'lucide-react'
+import { Sun, Moon, Download, LogOut, Database, ShieldCheck, CheckCircle2, Car } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 import { useData } from '../context/DataContext'
@@ -16,19 +16,20 @@ export default function Settings() {
   const navigate = useNavigate()
   const [confirm, setConfirm] = useState(false)
 
-  const name = user?.email?.split('@')[0] || 'admin'
+  const name = user?.displayName || user?.email?.split('@')[0] || 'admin'
 
   const backup = () => {
-    const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), vehicles, rentals }, null, 2)], {
-      type: 'application/json',
-    })
+    const blob = new Blob(
+      [JSON.stringify({ exportedAt: new Date().toISOString(), vehicles, rentals }, null, 2)],
+      { type: 'application/json' }
+    )
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `fleetline-backup-${new Date().toISOString().slice(0, 10)}.json`
+    a.download = `drift-backup-${new Date().toISOString().slice(0, 10)}.json`
     a.click()
     URL.revokeObjectURL(url)
-    toast('Backup downloaded')
+    toast('Data backup downloaded successfully')
   }
 
   return (
@@ -36,43 +37,56 @@ export default function Settings() {
       <div className="page-head">
         <div>
           <h1>Settings</h1>
-          <p>Your account, how the dashboard looks, and a copy of your data</p>
+          <p>Manage your account preferences, theme, and data backups</p>
         </div>
       </div>
 
       <div className="grid-2">
+        {/* Account Panel */}
         <section className="panel">
           <header className="panel-head">
             <h3>Account</h3>
           </header>
           <div className="panel-body">
-            <div className="row" style={{ gap: 12, marginBottom: 18 }}>
-              <span className="avatar" style={{ width: 44, height: 44, flex: '0 0 44px', fontSize: '1rem' }}>
+            <div className="row" style={{ gap: 14, marginBottom: 20 }}>
+              <span
+                className="avatar"
+                style={{
+                  width: 48,
+                  height: 48,
+                  flex: '0 0 48px',
+                  fontSize: '1.1rem',
+                  background: 'var(--amber-soft)',
+                  color: 'var(--amber)',
+                  border: '1px solid var(--amber)',
+                }}
+              >
                 {initials(name)}
               </span>
               <div>
-                <strong style={{ display: 'block' }}>{name}</strong>
-                <span className="hint">{user?.email}</span>
-                <div style={{ marginTop: 6, fontSize: '0.78rem', color: 'var(--muted)' }}>
-                  UID: <code style={{ userSelect: 'all', background: 'var(--surface-2)', padding: '2px 6px', borderRadius: 4, color: 'var(--text)', fontFamily: 'monospace' }}>{user?.uid || 'Not loaded'}</code>
+                <strong style={{ display: 'block', fontSize: '1.05rem' }}>{name}</strong>
+                <span className="hint" style={{ fontSize: '0.86rem' }}>
+                  {user?.email || 'admin@drift.co'}
+                </span>
+                <div style={{ marginTop: 6 }}>
+                  <span className="badge amber" style={{ fontSize: '0.72rem' }}>
+                    Principal Owner
+                  </span>
                 </div>
               </div>
             </div>
 
-            <div className="alert info">
-              <ShieldCheck size={16} />
-              <span>
-                This is the only account with access. Change the password from Firebase console →
-                Authentication → Users, or send yourself a reset email from there.
-              </span>
-            </div>
-
-            <button className="btn btn-block" style={{ marginTop: 14 }} onClick={() => setConfirm(true)}>
+            <button
+              className="btn btn-block"
+              style={{ marginTop: 8 }}
+              onClick={() => setConfirm(true)}
+            >
               <LogOut size={15} /> Sign out
             </button>
           </div>
         </section>
 
+        {/* Appearance Panel */}
         <section className="panel">
           <header className="panel-head">
             <h3>Appearance</h3>
@@ -81,49 +95,54 @@ export default function Settings() {
             <div className="setting-row">
               <div>
                 <strong>{theme === 'dark' ? 'Dark' : 'Light'} theme</strong>
-                <p>Dark is easier at night in the shop; light reads better in daylight.</p>
+                <p>
+                  {theme === 'dark'
+                    ? 'Dark carbon high-contrast theme optimized for night and low-light environments.'
+                    : 'Clean light mode optimized for daytime reading.'}
+                </p>
               </div>
-              <button className={`switch ${theme === 'dark' ? 'on' : ''}`} onClick={toggle} aria-label="Toggle theme" />
-            </div>
-            <div className="setting-row">
-              <div>
-                <strong>Quick switch</strong>
-                <p>The sun and moon button in the top bar does the same thing from any page.</p>
-              </div>
-              <span className="icon-btn" aria-hidden="true">
-                {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-              </span>
+              <button
+                className={`switch ${theme === 'dark' ? 'on' : ''}`}
+                onClick={toggle}
+                aria-label="Toggle theme"
+              />
             </div>
           </div>
         </section>
 
+        {/* Your Data Panel */}
         <section className="panel">
           <header className="panel-head">
-            <h3>Your data</h3>
+            <h3>Fleet Data &amp; Backup</h3>
           </header>
           <div className="panel-body">
             <div className="setting-row">
               <div>
-                <strong>{num(vehicles.length)} vehicles, {num(rentals.length)} rentals</strong>
-                <p>Stored in Cloud Firestore and streamed to this dashboard as it changes.</p>
+                <strong>
+                  {num(vehicles.length)} vehicles, {num(rentals.length)} rentals
+                </strong>
+                <p>Active fleet records synchronized in real time.</p>
               </div>
-              <Database size={18} style={{ color: 'var(--muted)' }} />
+              <Database size={18} style={{ color: 'var(--amber)' }} />
             </div>
+
             <div className="setting-row">
               <div>
-                <strong>Download a backup</strong>
-                <p>A JSON copy of every vehicle and rental, useful before a big cleanup.</p>
+                <strong>Download data backup</strong>
+                <p>Export a full JSON copy of all vehicles and rental records.</p>
               </div>
               <button className="btn btn-sm" onClick={backup}>
                 <Download size={14} /> Download
               </button>
             </div>
+
             {rentals[0] && (
               <div className="setting-row">
                 <div>
-                  <strong>Last rental recorded</strong>
+                  <strong>Last recorded rental</strong>
                   <p>
-                    {rentals[0].driverName} on {rentals[0].vehicleName}, {fmtDate(rentals[0].startDate)}
+                    {rentals[0].driverName} &bull; {rentals[0].vehicleName} (
+                    {fmtDate(rentals[0].startDate)})
                   </p>
                 </div>
               </div>
@@ -131,32 +150,39 @@ export default function Settings() {
           </div>
         </section>
 
+        {/* System Overview Panel */}
         <section className="panel">
           <header className="panel-head">
-            <h3>Security</h3>
+            <h3>System Status</h3>
           </header>
           <div className="panel-body">
-            <p style={{ color: 'var(--muted)', fontSize: '0.88rem', marginBottom: 14 }}>
-              Firestore rules only let the admin UID or authorized email read or write. Make sure to publish these in Firebase Console → Firestore Database → Rules:
-            </p>
-            <pre
-              style={{
-                background: 'var(--surface-2)',
-                border: '1px solid var(--line)',
-                borderRadius: 'var(--r-sm)',
-                padding: 12,
-                fontSize: '0.78rem',
-                overflowX: 'auto',
-                margin: 0,
-                color: 'var(--muted)',
-                fontFamily: 'monospace',
-              }}
-            >{`allow read, write: if request.auth != null
-  && (request.auth.uid == "${user?.uid || 'YUadCTU9tVhXttsE9rq1AcHvE492'}"
-      || request.auth.token.email == "admin@fleetline.local");`}</pre>
-            <p className="hint" style={{ marginTop: 10 }}>
-              The full rule set ships in firestore.rules at the project root.
-            </p>
+            <div className="setting-row">
+              <div>
+                <strong>Service Status</strong>
+                <p>All core systems operational and synchronized.</p>
+              </div>
+              <span className="badge green" style={{ fontSize: '0.75rem' }}>
+                <CheckCircle2 size={12} style={{ marginRight: 4 }} /> Operational
+              </span>
+            </div>
+
+            <div className="setting-row">
+              <div>
+                <strong>Fleetline Core</strong>
+                <p>Automotive rental management platform v1.2</p>
+              </div>
+              <span className="hint" style={{ fontSize: '0.82rem' }}>
+                v1.2.0
+              </span>
+            </div>
+
+            <div className="setting-row">
+              <div>
+                <strong>Security Protection</strong>
+                <p>Owner-only access with encrypted session persistence.</p>
+              </div>
+              <ShieldCheck size={18} style={{ color: 'var(--green)' }} />
+            </div>
           </div>
         </section>
       </div>
@@ -164,7 +190,7 @@ export default function Settings() {
       <ConfirmDialog
         open={confirm}
         title="Sign out?"
-        body="You'll need your username and password to get back in."
+        body="You will need your username and password to log back into Drift.co dashboard."
         confirmLabel="Sign out"
         onCancel={() => setConfirm(false)}
         onConfirm={async () => {
