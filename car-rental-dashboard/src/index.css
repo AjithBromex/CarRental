@@ -46,6 +46,12 @@
   --shadow: 0 16px 40px rgba(0, 0, 0, 0.55), inset 0 1px 1px rgba(255, 255, 255, 0.16);
   --overlay: rgba(3, 4, 6, 0.8);
   --grid-line: rgba(255, 255, 255, 0.04);
+  --elevated-surface: rgba(18, 22, 32, 0.94);
+  --elevated-border: rgba(255, 255, 255, 0.18);
+  --elevated-shadow: 0 30px 80px rgba(0, 0, 0, 0.75), inset 0 1px 1px rgba(255, 255, 255, 0.25);
+  --elevated-head-bg: rgba(255, 255, 255, 0.03);
+  --elevated-foot-bg: rgba(255, 255, 255, 0.02);
+  --glass-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, transparent 100%);
 }
 
 [data-theme='light'] {
@@ -62,6 +68,12 @@
   --shadow: 0 14px 35px rgba(16, 24, 32, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.8);
   --overlay: rgba(16, 20, 28, 0.45);
   --grid-line: rgba(16, 20, 28, 0.05);
+  --elevated-surface: rgba(255, 255, 255, 0.97);
+  --elevated-border: rgba(0, 0, 0, 0.12);
+  --elevated-shadow: 0 24px 64px rgba(16, 24, 32, 0.18), 0 4px 16px rgba(16, 24, 32, 0.06);
+  --elevated-head-bg: rgba(0, 0, 0, 0.025);
+  --elevated-foot-bg: rgba(0, 0, 0, 0.015);
+  --glass-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, transparent 100%);
 }
 
 /* ---------- base ---------- */
@@ -565,6 +577,19 @@ td.num,
 .nav-item.active svg {
   color: #ff3340;
   filter: drop-shadow(0 0 6px rgba(229, 27, 36, 0.6));
+}
+
+[data-theme='light'] .nav-item.active {
+  background: rgba(229, 27, 36, 0.12);
+  color: #c91821;
+  border-color: rgba(229, 27, 36, 0.35);
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(229, 27, 36, 0.12);
+}
+
+[data-theme='light'] .nav-item.active svg {
+  color: #e51b24;
+  filter: none;
 }
 
 .rail.collapsed .nav-item {
@@ -2160,12 +2185,13 @@ td.right {
 .modal {
   width: 100%;
   max-width: 480px;
-  background: rgba(18, 22, 32, 0.88);
+  background: var(--elevated-surface);
   backdrop-filter: blur(28px) saturate(190%);
   -webkit-backdrop-filter: blur(28px) saturate(190%);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--elevated-border);
   border-radius: var(--r-lg);
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.75), inset 0 1px 1px rgba(255, 255, 255, 0.25);
+  box-shadow: var(--elevated-shadow);
+  color: var(--text);
   max-height: 90vh;
   display: flex;
   flex-direction: column;
@@ -2181,7 +2207,7 @@ td.right {
   left: 0;
   right: 0;
   height: 40%;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, transparent 100%);
+  background: var(--glass-sheen);
   pointer-events: none;
 }
 
@@ -2203,12 +2229,18 @@ td.right {
   gap: 12px;
   padding: 18px 22px;
   border-bottom: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--elevated-head-bg);
+}
+
+.modal-head h3 {
+  color: var(--text);
+  font-weight: 600;
 }
 
 .modal-body {
   padding: 22px;
   overflow-y: auto;
+  color: var(--text);
 }
 
 .modal-foot {
@@ -2217,7 +2249,7 @@ td.right {
   gap: 10px;
   padding: 16px 22px;
   border-top: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--elevated-foot-bg);
 }
 
 /* ---------- toasts ---------- */
@@ -2239,11 +2271,12 @@ td.right {
   gap: 10px;
   padding: 13px 16px;
   border-radius: var(--r-md);
-  background: rgba(18, 22, 32, 0.85);
+  background: var(--elevated-surface);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--elevated-border);
+  box-shadow: var(--elevated-shadow);
+  color: var(--text);
   font-size: 0.88rem;
   min-width: 260px;
   animation: toast-in 0.26s var(--ease);
@@ -2273,12 +2306,13 @@ td.right {
   top: calc(100% + 8px);
   right: 0;
   width: min(380px, calc(100vw - 32px));
-  background: rgba(18, 22, 32, 0.9);
+  background: var(--elevated-surface);
   backdrop-filter: blur(24px) saturate(190%);
   -webkit-backdrop-filter: blur(24px) saturate(190%);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--elevated-border);
   border-radius: var(--r-md);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  box-shadow: var(--elevated-shadow);
+  color: var(--text);
   z-index: 120;
   overflow: hidden;
   animation: modal-in 0.18s var(--ease);
@@ -2290,6 +2324,7 @@ td.right {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background: var(--elevated-head-bg);
 }
 
 .pop-list {
