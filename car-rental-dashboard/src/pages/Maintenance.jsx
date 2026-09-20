@@ -6,7 +6,6 @@ import {
   Coins,
   IndianRupee,
   Plus,
-  Pencil,
   Trash2,
   AlertCircle,
   CheckCircle2,
@@ -347,17 +346,7 @@ export default function Maintenance() {
                           color: maintCost > 0 ? 'var(--amber)' : 'var(--muted)',
                         }}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}>
-                          <span>{maintCost > 0 ? `− ${inr(maintCost)}` : '₹0'}</span>
-                          <button
-                            className="icon-btn ghost"
-                            style={{ width: 24, height: 24 }}
-                            onClick={() => openEditCostModal(v)}
-                            title={`Edit maintenance cost for ${v.name}`}
-                          >
-                            <Pencil size={12} />
-                          </button>
-                        </div>
+                        {maintCost > 0 ? `− ${inr(maintCost)}` : '₹0'}
                       </td>
                       {/* Separate Net Profit Column */}
                       <td
