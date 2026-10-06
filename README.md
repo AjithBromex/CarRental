@@ -1,163 +1,221 @@
-# Fleetline — car rental management & vehicle analytics
+🚗 CarRental — Fleet & Rental Management Dashboard
 
-A React + Firebase dashboard for a small car rental business. One owner account, live
-Firestore data, and a separate analytics page for every vehicle.
+A modern, responsive car rental management dashboard built with React and Firebase. It helps rental owners manage vehicles, rentals, payments, drivers, and business analytics from a single interface.
 
----
+✨ Features
 
-## Run it
+📊 Dashboard
 
-```bash
+- Key business statistics
+- Monthly revenue overview
+- Collected vs outstanding payments
+- Fleet availability overview
+- Rental activity
+- Top-performing vehicles
+- Recent rentals
+
+🚘 Vehicle Management
+
+- Add, edit, and delete vehicles
+- Vehicle status management
+- Filter vehicles by status and type
+- Sort by revenue, rentals, rental days, or balance
+- Vehicle performance analytics
+- Rental history for individual vehicles
+
+📋 Rental Management
+
+- View and manage all bookings
+- Search by driver, phone number, vehicle, registration number, or destination
+- Filter by vehicle, rental status, payment status, and date
+- Update rental status
+- Export rental records as CSV
+
+💳 Payment Management
+
+- Track collected and outstanding payments
+- View outstanding balances
+- Record payments
+- Automatically calculate remaining balances
+
+👤 Driver Management
+
+- Driver records grouped by phone number
+- Lifetime spending
+- Outstanding balance
+- Rental history
+
+📈 Analytics
+
+- Compare vehicle performance
+- Daily, weekly, and monthly trends
+- Revenue and rental statistics
+- Vehicle comparison charts
+- Performance tables
+
+🔔 Notifications
+
+The dashboard highlights items requiring attention, including:
+
+- Overdue rentals
+- Upcoming rental returns
+- Outstanding payments
+- Idle vehicles
+- Vehicles under maintenance
+
+🎨 UI & Design
+
+- Modern responsive interface
+- Mobile-first design
+- Light and dark themes
+- Responsive tables
+- Accessible touch targets
+- Smooth, lightweight interactions
+- Reduced-motion support
+- Consistent design system
+
+🛠️ Technology Stack
+
+- React
+- JavaScript
+- Firebase
+  - Firebase Authentication
+  - Cloud Firestore
+  - Firebase Storage
+- CSS
+- Recharts
+- Vite
+
+📁 Project Structure
+
+CarRental/
+├── car-rental-dashboard/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── utils/
+│   │   │   └── format.js
+│   │   ├── DataContext.jsx
+│   │   ├── analytics.js
+│   │   ├── index.css
+│   │   └── rentalService.js
+│   ├── package.json
+│   └── ...
+│
+├── firestore.rules
+├── .gitignore
+└── README.md
+
+⚡ Performance
+
+Pages are loaded using React lazy loading so that application code is loaded when required rather than loading every page at startup.
+
+The application also uses responsive layouts and lightweight interactions to provide a smooth experience across desktop and mobile devices.
+
+🔄 Rental & Vehicle Management
+
+Rental and vehicle information is kept synchronized through Firestore operations.
+
+When a rental status changes, the corresponding vehicle status is updated accordingly. Vehicle changes and related rental updates are handled together where required to help maintain consistent records.
+
+🖼️ Vehicle Photos
+
+Vehicle images can be added using image URLs.
+
+For private deployments, images can also be hosted using Firebase Storage and their URLs can be used by the application.
+
+🎨 Design System
+
+The interface uses a custom design system with:
+
+- CSS custom properties
+- Light and dark themes
+- Consistent typography
+- Responsive spacing
+- Registration-number style vehicle identifiers
+- Mobile-friendly layouts
+
+The design is inspired by modern fleet-management interfaces while maintaining a clean and simple user experience.
+
+🔐 Security
+
+This project uses Firebase Authentication and Firestore Security Rules for access control.
+
+Important: Never commit the following files or information to the public repository:
+
+.env
+.env.local
+serviceAccountKey.json
+firebase-adminsdk-*.json
+
+Never publish:
+
+- Passwords
+- Private API credentials
+- Firebase Admin SDK credentials
+- Database exports
+- Customer personal information
+- Private business data
+
+Environment-specific configuration should be stored locally in environment files and excluded through ".gitignore".
+
+⚙️ Installation
+
+Clone the repository:
+
+git clone https://github.com/AjithBromex/CarRental.git
+
+Navigate to the project:
+
+cd CarRental/car-rental-dashboard
+
+Install dependencies:
+
 npm install
-cp .env.example .env     # fill in your Firebase keys
+
+Create your local environment file:
+
+.env
+
+Add the required Firebase configuration variables to the local environment file.
+
+Then start the development server:
+
 npm run dev
-```
 
-Build for production with `npm run build`, preview with `npm run preview`.
+🌐 Deployment
 
----
+The project can be deployed using platforms such as Vercel or other services that support Vite/React applications.
 
-## Firebase setup (about ten minutes)
+Make sure the required environment variables are configured in the deployment platform.
 
-**1. Create the project**
+📱 Responsive Design
 
-Go to the [Firebase console](https://console.firebase.google.com), create a project, then add a
-**Web app**. Copy the config values into `.env`:
+The dashboard is designed for:
 
-```
-VITE_FIREBASE_API_KEY=AIza…
-VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your-project
-VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=1234567890
-VITE_FIREBASE_APP_ID=1:1234:web:abcd
-VITE_ADMIN_DOMAIN=fleetline.local
-```
+- 📱 Mobile
+- 💻 Laptop
+- 🖥️ Desktop
 
-**2. Create the owner account**
+Tables use their own horizontal scrolling areas on smaller screens, while navigation adapts to different screen sizes.
 
-Authentication → Sign-in method → enable **Email/Password**. Then Users → **Add user**:
+📌 Project Purpose
 
-| Field | Value |
-| --- | --- |
-| Email | `admin@fleetline.local` (or username `admin`) |
-| Password | `admin123` |
+CarRental is designed as a management solution for rental businesses that need a centralized way to manage:
 
-On the login screen, you can log in directly with:
-- **Username**: `admin`
-- **Password**: `admin123`
+Vehicles → Rentals → Drivers → Payments → Analytics
 
-**3. Lock down the database**
+The goal is to simplify day-to-day rental operations while providing useful business insights through a modern dashboard.
 
-Firestore Database → Create database → **Production mode**. Then open the Rules tab, paste the
-contents of `firestore.rules`, and replace `ADMIN_UID` with the UID shown next to your user in
-Authentication → Users.
+👨‍💻 Developer
 
-Those rules do two jobs: only that one UID can touch anything, and every write is shape-checked
-server-side — a negative amount, a paid amount larger than the total, or an unknown status is
-rejected even if someone bypasses the form.
+AjithBromex
 
-**4. Indexes**
-
-The dashboard orders vehicles by `createdAt` and rentals by `startDate`. Firestore builds these
-single-field indexes automatically. If a console warning ever asks for a composite index, follow
-its link and click create.
+GitHub:
+https://github.com/AjithBromex
 
 ---
 
-## Data model
+⚠️ Note
 
-```
-vehicles/{vehicleId}
-  name, model, registrationNumber, image, type, year,
-  status: available | rented | maintenance,
-  notes, createdAt, updatedAt
-
-rentals/{rentalId}
-  vehicleId          ← the relationship; everything else is derived from it
-  vehicleName, registrationNumber   ← copied so history survives a vehicle rename
-  driverName, phoneNumber, location,
-  startDate, endDate, days,
-  totalAmount, amountPaid, balance,
-  status: active | completed | cancelled,
-  notes, createdAt, updatedAt
-```
-
-Totals, day counts, revenue, per-vehicle stats and driver records are **never stored** — they're
-computed from the two collections in `src/utils/analytics.js`. That means numbers can't drift out
-of sync, and editing one rental instantly corrects every chart.
-
-`balance` is written alongside each rental purely so Firestore can query and sort on it; the UI
-always recalculates `total − paid`.
-
----
-
-## How the pieces fit
-
-| Concern | Where |
-| --- | --- |
-| Live data for the whole app | `context/DataContext.jsx` — one pair of `onSnapshot` listeners, shared by every page |
-| Sign in / sign out | `context/AuthContext.jsx` |
-| Writes | `services/vehicleService.js`, `services/rentalService.js` |
-| All maths | `utils/analytics.js` |
-| Money and date formatting | `utils/format.js` |
-| Design tokens, every style | `index.css` |
-
-Pages are `React.lazy`-loaded, so only the route in view is downloaded.
-
-### Rental status keeps the fleet honest
-
-A rental and its vehicle always move together in a single Firestore `writeBatch`:
-
-- rental set to **active** → vehicle becomes **rented**
-- rental set to **completed** or **cancelled** → vehicle becomes **available**
-- moving a rental to a different vehicle frees the old one in the same batch
-
-Deleting a vehicle removes its rentals too, atomically, so no orphan records are left behind.
-
----
-
-## What's on each page
-
-- **Dashboard** — eight headline numbers, revenue by month split into collected against
-  outstanding, fleet status donut, rentals per day, top earners, recent rentals.
-- **Vehicles** — cards or table, filter by status and type, sort by revenue, rentals, days or
-  balance. Add, edit, delete with confirmation.
-- **Vehicle analytics** (click any vehicle) — overview, times rented, days out, revenue,
-  collected, outstanding, average value and duration, share of fleet revenue, a combined
-  revenue/rentals/days chart, paid-against-pending donut, most common destinations, and the full
-  rental history with inline status changes.
-- **Rentals** — every booking with search across driver, phone, vehicle, plate and place; filters
-  for vehicle, rental status, payment status and date range; CSV export.
-- **Payments** — collection rate, who owes the most by vehicle, and a **record payment** dialog
-  that tops up `amountPaid` and recalculates the balance.
-- **Drivers** — one row per phone number with lifetime spend, balance and expandable history.
-- **Analytics** — league table by any metric, daily/weekly/monthly trends, and a comparison of up
-  to four vehicles on a radar chart plus table.
-- **Settings** — theme, account, JSON backup, security notes.
-
-The bell in the top bar collects what needs action: overdue returns, rentals ending within two
-days, outstanding money, idle vehicles, vehicles in maintenance.
-
----
-
-## Vehicle photos
-
-The form takes an image URL, which keeps the app free of upload plumbing. To host your own
-photos, upload them in Firebase console → Storage, copy the download URL, and paste it in.
-
----
-
-## Design notes
-
-The palette is built around an Indian number plate — signal amber on graphite — and registration
-numbers are set as plate chips throughout, so a vehicle is recognisable at a glance in any table.
-Headings and all figures use Space Grotesk with tabular numerals so money columns line up; body
-text and table content use Inter. Both themes are defined as CSS custom properties on
-`:root[data-theme]`, so the switcher is a single attribute change with no flash.
-
-Layout is mobile-first: the sidebar collapses to an icon rail on laptops and slides in from the
-left on phones, tables scroll horizontally inside their own container rather than pushing the
-page sideways, and buttons grow to 44px touch targets on small screens. Motion is limited to
-things you triggered — opening a dialog, switching a toggle — and is disabled entirely under
-`prefers-reduced-motion`.
+This repository contains the application's source code. Production credentials, customer information, private business data, and other sensitive configuration should never be committed to the public repository.
