@@ -545,9 +545,9 @@ export default function VehicleAnalytics() {
                     <YAxis yAxisId="count" orientation="right" {...axisProps} width={32} allowDecimals={false} />
                     <Tooltip {...tooltipStyle} formatter={(v, n) => (n === 'Revenue' ? [inr(v), n] : [v, n])} />
                     <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
-                    <Bar yAxisId="money" dataKey="revenue" name="Revenue" fill={chartColors.amber} radius={[5, 5, 0, 0]} barSize={26} isAnimationActive={false} />
-                    <Line yAxisId="count" type="monotone" dataKey="rentals" name="Rentals" stroke={chartColors.blue} strokeWidth={2} dot={{ r: 3 }} isAnimationActive={false} />
-                    <Line yAxisId="count" type="monotone" dataKey="days" name="Days out" stroke={chartColors.violet} strokeWidth={2} strokeDasharray="4 3" dot={{ r: 3 }} isAnimationActive={false} />
+                    <Bar yAxisId="money" dataKey="revenue" name="Revenue" fill={chartColors.amber} radius={[5, 5, 0, 0]} barSize={26} isAnimationActive={true} animationDuration={650} animationEasing="ease-out" />
+                    <Line yAxisId="count" type="monotone" dataKey="rentals" name="Rentals" stroke={chartColors.blue} strokeWidth={2} dot={{ r: 3 }} isAnimationActive={true} animationDuration={650} animationEasing="ease-out" />
+                    <Line yAxisId="count" type="monotone" dataKey="days" name="Days out" stroke={chartColors.violet} strokeWidth={2} strokeDasharray="4 3" dot={{ r: 3 }} isAnimationActive={true} animationDuration={650} animationEasing="ease-out" />
                   </ComposedChart>
                 </ResponsiveContainer>
               </div>
@@ -562,7 +562,7 @@ export default function VehicleAnalytics() {
                     <div className="chart-box short">
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
-                          <Pie data={split} dataKey="value" nameKey="name" innerRadius="58%" outerRadius="84%" paddingAngle={3} stroke="none" isAnimationActive={false}>
+                          <Pie data={split} dataKey="value" nameKey="name" innerRadius="58%" outerRadius="84%" paddingAngle={3} stroke="none" isAnimationActive={true} animationDuration={650} animationEasing="ease-out">
                             {split.map((d) => (
                               <Cell key={d.name} fill={d.fill} />
                             ))}

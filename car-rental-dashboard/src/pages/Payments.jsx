@@ -161,7 +161,7 @@ export default function Payments() {
             <div className="chart-box">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={split} dataKey="value" nameKey="name" innerRadius="56%" outerRadius="82%" paddingAngle={3} stroke="none" isAnimationActive={false}>
+                  <Pie data={split} dataKey="value" nameKey="name" innerRadius="56%" outerRadius="82%" paddingAngle={3} stroke="none" isAnimationActive={true} animationDuration={650} animationEasing="ease-out">
                     {split.map((d) => (
                       <Cell key={d.name} fill={d.fill} />
                     ))}
@@ -185,7 +185,7 @@ export default function Payments() {
                   <XAxis type="number" {...axisProps} tickFormatter={inrShort} />
                   <YAxis type="category" dataKey="name" {...axisProps} width={96} />
                   <Tooltip {...tooltipStyle} formatter={(v) => [inr(v), 'Outstanding']} />
-                  <Bar dataKey="balance" fill={chartColors.red} radius={[0, 6, 6, 0]} barSize={18} isAnimationActive={false} />
+                  <Bar dataKey="balance" fill={chartColors.red} radius={[0, 6, 6, 0]} barSize={18} isAnimationActive={true} animationDuration={650} animationEasing="ease-out" />
                 </BarChart>
               </ResponsiveContainer>
             </div>

@@ -157,8 +157,8 @@ export default function Dashboard() {
                     <YAxis {...axisProps} width={54} tickFormatter={inrShort} />
                     <Tooltip {...tooltipStyle} formatter={(v, n) => [inr(v), n]} />
                     <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
-                    <Bar dataKey="paid" name="Collected" stackId="money" fill={chartColors.green} radius={[0, 0, 0, 0]} isAnimationActive={false} />
-                    <Bar dataKey="pending" name="Outstanding" stackId="money" fill={chartColors.red} radius={[5, 5, 0, 0]} isAnimationActive={false} />
+                    <Bar dataKey="paid" name="Collected" stackId="money" fill={chartColors.green} radius={[0, 0, 0, 0]} isAnimationActive={true} animationDuration={650} animationEasing="ease-out" />
+                    <Bar dataKey="pending" name="Outstanding" stackId="money" fill={chartColors.red} radius={[5, 5, 0, 0]} isAnimationActive={true} animationDuration={650} animationEasing="ease-out" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -179,7 +179,7 @@ export default function Dashboard() {
                   <div className="chart-box short">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
-                        <Pie data={fleetSplit} dataKey="value" nameKey="name" innerRadius="58%" outerRadius="82%" paddingAngle={3} stroke="none" isAnimationActive={false}>
+                        <Pie data={fleetSplit} dataKey="value" nameKey="name" innerRadius="58%" outerRadius="82%" paddingAngle={3} stroke="none" isAnimationActive={true} animationDuration={650} animationEasing="ease-out">
                           {fleetSplit.map((d) => (
                             <Cell key={d.name} fill={d.fill} />
                           ))}
@@ -209,7 +209,7 @@ export default function Dashboard() {
                     <XAxis dataKey="label" {...axisProps} interval={1} />
                     <YAxis {...axisProps} width={28} allowDecimals={false} />
                     <Tooltip {...tooltipStyle} />
-                    <Area type="monotone" dataKey="rentals" name="Rentals" stroke={chartColors.amber} strokeWidth={2} fill="url(#rentalFade)" isAnimationActive={false} />
+                    <Area type="monotone" dataKey="rentals" name="Rentals" stroke={chartColors.amber} strokeWidth={2} fill="url(#rentalFade)" isAnimationActive={true} animationDuration={650} animationEasing="ease-out" />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -226,7 +226,7 @@ export default function Dashboard() {
                       <XAxis type="number" {...axisProps} tickFormatter={inrShort} />
                       <YAxis type="category" dataKey="name" {...axisProps} width={96} />
                       <Tooltip {...tooltipStyle} formatter={(v) => [inr(v), 'Revenue']} />
-                      <Bar dataKey="revenue" fill={chartColors.amber} radius={[0, 6, 6, 0]} barSize={18} isAnimationActive={false} />
+                      <Bar dataKey="revenue" fill={chartColors.amber} radius={[0, 6, 6, 0]} barSize={18} isAnimationActive={true} animationDuration={650} animationEasing="ease-out" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
