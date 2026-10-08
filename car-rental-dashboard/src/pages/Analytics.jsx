@@ -184,7 +184,7 @@ export default function Analytics() {
               <XAxis type="number" {...axisProps} tickFormatter={(v) => (metric === 'rentals' || metric === 'days' ? v : inrShort(v))} />
               <YAxis type="category" dataKey="name" {...axisProps} width={104} />
               <Tooltip {...tooltipStyle} formatter={(v) => [METRICS[metric].fmt(v), METRICS[metric].label]} />
-              <Bar dataKey="value" fill={METRICS[metric].color} radius={[0, 6, 6, 0]} barSize={20} />
+              <Bar dataKey="value" fill={METRICS[metric].color} radius={[0, 6, 6, 0]} barSize={20} isAnimationActive={false} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -212,8 +212,8 @@ export default function Analytics() {
               <YAxis yAxisId="money" orientation="right" {...axisProps} width={54} tickFormatter={inrShort} />
               <Tooltip {...tooltipStyle} formatter={(v, n) => (n === 'Revenue' ? [inr(v), n] : [v, n])} />
               <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
-              <Line yAxisId="count" type="monotone" dataKey="rentals" name="Rentals" stroke={chartColors.blue} strokeWidth={2.4} dot={{ r: 3 }} />
-              <Line yAxisId="money" type="monotone" dataKey="revenue" name="Revenue" stroke={chartColors.amber} strokeWidth={2.4} dot={{ r: 3 }} />
+              <Line yAxisId="count" type="monotone" dataKey="rentals" name="Rentals" stroke={chartColors.blue} strokeWidth={2.4} dot={{ r: 3 }} isAnimationActive={false} />
+              <Line yAxisId="money" type="monotone" dataKey="revenue" name="Revenue" stroke={chartColors.amber} strokeWidth={2.4} dot={{ r: 3 }} isAnimationActive={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -254,7 +254,7 @@ export default function Analytics() {
                 <PolarGrid stroke="var(--line)" />
                 <PolarAngleAxis dataKey="axis" tick={{ fill: 'var(--faint)', fontSize: 11 }} />
                 {comparison.map((v, i) => (
-                  <Radar key={v.id} name={v.name} dataKey={`v_${v.id}`} stroke={palette[i % 4]} fill={palette[i % 4]} fillOpacity={0.16} strokeWidth={2} />
+                  <Radar key={v.id} name={v.name} dataKey={`v_${v.id}`} stroke={palette[i % 4]} fill={palette[i % 4]} fillOpacity={0.16} strokeWidth={2} isAnimationActive={false} />
                 ))}
                 <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
                 <Tooltip {...tooltipStyle} formatter={(v) => `${Number(v).toFixed(0)}% of best`} />

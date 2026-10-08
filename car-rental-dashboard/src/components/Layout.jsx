@@ -29,8 +29,6 @@ export default function Layout() {
         <div className="dashboard-blob blob-2" />
         <div className="dashboard-blob blob-3" />
         <div className="dashboard-blob blob-4" />
-        <div className="dashboard-stripe stripe-1" />
-        <div className="dashboard-stripe stripe-2" />
       </div>
 
       <Sidebar
@@ -64,7 +62,9 @@ export default function Layout() {
           )}
           <ErrorBoundary>
             <Suspense fallback={<PageLoader label="Loading page" />}>
-              <Outlet />
+              <div key={location.pathname} className="page-transition-frame">
+                <Outlet />
+              </div>
             </Suspense>
           </ErrorBoundary>
         </main>
